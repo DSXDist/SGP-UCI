@@ -68,14 +68,7 @@ export default function AdminDashboard() {
               <Badge bg="secondary" className="ms-2 align-self-center">Administrador</Badge>
             </div>
             <div className="ms-auto d-flex align-items-center gap-3">
-              <Button
-                variant="link"
-                className="position-relative p-0"
-                onClick={() => window.location.href = '/notifications'}
-              >
-                <Bell size={20} />
-                <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">5</Badge>
-              </Button>
+              
               <div className="d-flex align-items-center gap-2">
                 <Button variant="link" className="d-flex align-items-center gap-2 text-dark text-decoration-none p-0">
                   <User className="rounded-circle bg-light border" size={32} />
@@ -107,6 +100,14 @@ export default function AdminDashboard() {
             <Nav.Link href="/homelibrarian/users" className="d-flex align-items-center gap-2">
               <Users size={20} />
               Usuarios
+            </Nav.Link>
+            {/* Nuevo botón para Catálogo */}
+            <Nav.Link
+              href="/homelibrarian/catalog"
+              className="d-flex align-items-center gap-2"
+            >
+              <BookOpen size={20} />
+              Catálogo
             </Nav.Link>
             <Nav.Link href="/homelibrarian/prestamos" className="d-flex align-items-center gap-2">
               <BookOpen size={20} />

@@ -11,6 +11,7 @@ import GestionUsuariosPage from './pages/librarian/users'
 import MisPrestamos from './pages/userLoans'
 import Notificaciones from './pages/notifications'
 import Feedback from './pages/feedback'
+import AdminCatalogPage from './pages/librarian/adminCatalog'
 
 function App() {
   return (
@@ -26,7 +27,7 @@ function App() {
         <Route path="/loans" element={<MisPrestamos />} />
         <Route path="/notifications" element={<Notificaciones />} />
         <Route path="/feedback" element={<Feedback />} />
-
+        <Route path='/homelibrarian/catalog' element={<AdminCatalogPage/>}/>
 
 
       </Routes>

@@ -325,14 +325,6 @@ export default function GestionUsuariosPage() {
               <Badge bg="secondary" className="ms-2 align-self-center">Administrador</Badge>
             </div>
             <div className="ms-auto d-flex align-items-center gap-3">
-              <Button
-                variant="link"
-                className="position-relative p-0"
-                onClick={() => navigate('/notifications')}
-              >
-                <Bell size={20} />
-                <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">5</Badge>
-              </Button>
               <div className="d-flex align-items-center gap-2">
                 <Button variant="link" className="d-flex align-items-center gap-2 text-dark text-decoration-none p-0">
                   <User className="rounded-circle bg-light border" size={32} />
@@ -377,6 +369,14 @@ export default function GestionUsuariosPage() {
             >
               <Users size={20} />
               Usuarios
+            </Nav.Link>
+            {/* Nuevo botón para Catálogo */}
+            <Nav.Link
+              href="/homelibrarian/catalog"
+              className="d-flex align-items-center gap-2"
+            >
+              <BookOpen size={20} />
+              Catálogo
             </Nav.Link>
             <Nav.Link href="/homelibrarian/prestamos" className="d-flex align-items-center gap-2">
               <BookOpen size={20} />
@@ -668,6 +668,94 @@ export default function GestionUsuariosPage() {
             Guardar
           </Button>
         </Modal.Footer>
+      </Modal>
+
+      {/* Modal Editar Usuario */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Editar Usuario</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedUser && (
+            <Form
+              onSubmit={e => {
+                e.preventDefault();
+                handleUpdateUser({});
+              }}
+            >
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Label>Nombre completo</Form.Label>
+                  <Form.Control
+                    defaultValue={selectedUser.nombre}
+                    required
+                  />
+                </Col>
+                <Col md={6}>
+                  <Form.Label>Correo electrónico</Form.Label>
+                  <Form.Control
+                    type="email"
+                    defaultValue={selectedUser.email}
+                    required
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Label>Tipo</Form.Label>
+                  <Form.Select defaultValue={selectedUser.tipo}>
+                    <option>Estudiante</option>
+                    <option>Profesor</option>
+                    <option>Personal</option>
+                  </Form.Select>
+                </Col>
+                <Col md={6}>
+                  <Form.Label>Teléfono</Form.Label>
+                  <Form.Control
+                    defaultValue={selectedUser.telefono}
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Label>Facultad</Form.Label>
+                  <Form.Control
+                    defaultValue={selectedUser.facultad}
+                  />
+                </Col>
+                <Col md={6}>
+                  <Form.Label>Carrera</Form.Label>
+                  <Form.Control
+                    defaultValue={selectedUser.carrera}
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Label>Año Académico</Form.Label>
+                  <Form.Control
+                    defaultValue={selectedUser.añoAcademico}
+                  />
+                </Col>
+                <Col md={6}>
+                  <Form.Label>Estado</Form.Label>
+                  <Form.Select defaultValue={selectedUser.estado}>
+                    <option>Activo</option>
+                    <option>Inactivo</option>
+                  </Form.Select>
+                </Col>
+              </Row>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+                  Cancelar
+                </Button>
+                <Button variant="primary" type="submit">
+                  Guardar Cambios
+                </Button>
+              </Modal.Footer>
+            </Form>
+          )}
+        </Modal.Body>
       </Modal>
     </div>
   );

@@ -1,156 +1,207 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   BookOpen,
   Users,
   FileText,
   BarChart3,
-  Search,
   Bell,
   LogOut,
   Plus,
-  Filter,
-  Download,
   Eye,
   CheckCircle,
   XCircle,
   Clock,
-  Calendar,
-  RefreshCw,
+  User
 } from "lucide-react";
-import { Navbar, Nav, Container, Row, Col, Card, Button, Form, Table, Dropdown, Badge, Tab, Tabs } from 'react-bootstrap';
+import { Nav, Container, Card, Button, Form, Table, Dropdown, Badge, Tab, Modal } from 'react-bootstrap';
 
 export default function PrestamosPage() {
+  // Simulación de nombre de usuario
+  let username = 'Bibliotecario';
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      username = localStorage.getItem('sgp-uci-username') || 'Bibliotecario';
+    } catch (e) {
+      username = 'Bibliotecario';
+    }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('sgp-uci-username');
+    window.location.href = '/';
+  };
+
+  // Estado para modales y mensajes
+  const [showDetails, setShowDetails] = useState(false);
+  const [detailsData, setDetailsData] = useState(null);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMsg, setAlertMsg] = useState("");
+  const [showNewPrestamo, setShowNewPrestamo] = useState(false);
+
+  // Funciones para acciones
+  const handleShowDetails = (prestamo) => {
+    setDetailsData(prestamo);
+    setShowDetails(true);
+  };
+
+  const handleAction = (msg) => {
+    setAlertMsg(msg);
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 2000);
+  };
+
+  const handleNewPrestamo = (e) => {
+    e && e.preventDefault();
+    setShowNewPrestamo(false);
+    handleAction("Nuevo préstamo creado correctamente");
+  };
+
+  const handleNotificarTodos = () => {
+    handleAction("Se ha enviado recordatorios a todos los usuarios");
+  };
+
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
-      {/* Header */}
-      <Navbar bg="white" sticky="top" className="border-bottom">
+      {/* Header igual a homeLibrarian */}
+      <header className="sticky-top bg-white border-bottom py-3">
         <Container fluid>
-          <Navbar.Brand href="#">
-            <BookOpen className="text-primary me-2" />
-            <span className="fw-bold">SGP-UCI</span>
-            <Badge bg="secondary" className="ms-2">Administrador</Badge>
-          </Navbar.Brand>
-          
-          <div className="d-flex align-items-center ms-auto">
-            <Form className="d-none d-md-flex me-3">
-              <div className="input-group">
-                <span className="input-group-text bg-white border-end-0">
-                  <Search className="text-muted" />
-                </span>
-                <Form.Control type="search" placeholder="Buscar..." className="border-start-0" />
+          <div className="d-flex align-items-center">
+            <div className="d-flex align-items-center me-4">
+              <BookOpen className="text-primary me-2" size={24} />
+              <span className="h5 mb-0 fw-bold">SGP-UCI</span>
+              <Badge bg="secondary" className="ms-2 align-self-center">Administrador</Badge>
+            </div>
+            <div className="ms-auto d-flex align-items-center gap-3">
+              <div className="d-flex align-items-center gap-2">
+                <Button variant="link" className="d-flex align-items-center gap-2 text-dark text-decoration-none p-0">
+                  <User className="rounded-circle bg-light border" size={32} />
+                  <span>{username}</span>
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  className="d-flex align-items-center gap-1"
+                  onClick={handleLogout}
+                  title="Cerrar sesión"
+                >
+                  <LogOut size={18} />
+                </Button>
               </div>
-            </Form>
-            
-            <Button variant="outline-secondary" className="position-relative me-2">
-              <Bell />
-              <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">5</Badge>
-            </Button>
-            
-            <Dropdown align="end">
-              <Dropdown.Toggle variant="link" className="d-flex align-items-center gap-2 text-decoration-none">
-                <img src="/placeholder.svg" alt="Avatar" className="rounded-circle" style={{width: '32px', height: '32px'}} />
-                <span>Bibliotecario</span>
-              </Dropdown.Toggle>
-              
-              <Dropdown.Menu>
-                <Dropdown.Header>Mi cuenta</Dropdown.Header>
-                <Dropdown.Divider />
-                <Dropdown.Item>
-                  <LogOut className="me-2" />
-                  Cerrar sesión
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
+            </div>
           </div>
         </Container>
-      </Navbar>
+      </header>
 
-      {/* Main Content */}
-      <Container fluid className="flex-grow-1">
-        <Row className="h-100">
-          {/* Sidebar */}
-          <Col md={3} className="d-none d-md-block bg-white border-end p-3">
-            <Nav variant="pills" className="flex-column gap-2">
-              <Nav.Link href="/admin" className="d-flex align-items-center gap-2">
-                <BarChart3 />
-                Dashboard
-              </Nav.Link>
-              <Nav.Link href="/admin/usuarios" className="d-flex align-items-center gap-2">
-                <Users />
-                Usuarios
-              </Nav.Link>
-              <Nav.Link active href="/admin/prestamos" className="d-flex align-items-center gap-2">
-                <BookOpen />
-                Préstamos
-              </Nav.Link>
-              <Nav.Link href="/admin/reportes" className="d-flex align-items-center gap-2">
-                <FileText />
-                Reportes
-              </Nav.Link>
-            </Nav>
-          </Col>
+      {/* Modal de acción */}
+      <Modal show={showAlert} onHide={() => setShowAlert(false)} centered>
+        <Modal.Body className="text-center">
+          <CheckCircle className="text-success mb-2" size={32} />
+          <div>{alertMsg}</div>
+        </Modal.Body>
+      </Modal>
 
-          {/* Main Content */}
-          <Col className="p-2 p-md-4">
-            <div className="mb-3 mb-md-4">
-              <h1 className="h4 h2-md fw-bold">Gestión de Préstamos</h1>
-              <p className="text-muted small">Administra los préstamos, solicitudes y devoluciones</p>
+      {/* Modal de detalles */}
+      <Modal show={showDetails} onHide={() => setShowDetails(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Detalles del Préstamo</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {detailsData && (
+            <div>
+              <p><strong>ID:</strong> {detailsData.id}</p>
+              <p><strong>Usuario:</strong> {detailsData.usuario}</p>
+              <p><strong>Correo:</strong> {detailsData.correo}</p>
+              <p><strong>Año Académico:</strong> {detailsData.año}</p>
+              <p><strong>Libro:</strong> {detailsData.libro}</p>
+              <p><strong>Fecha Préstamo:</strong> {detailsData.fechaPrestamo}</p>
+              <p><strong>Fecha Devolución:</strong> {detailsData.fechaDevolucion}</p>
+              <p><strong>Estado:</strong> {detailsData.estado}</p>
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal Nuevo Préstamo */}
+      <Modal show={showNewPrestamo} onHide={() => setShowNewPrestamo(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Nuevo Préstamo</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleNewPrestamo}>
+            <Form.Group className="mb-3">
+              <Form.Label>Usuario</Form.Label>
+              <Form.Control required placeholder="Nombre del usuario" />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Libro</Form.Label>
+              <Form.Control required placeholder="Título del libro" />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Fecha Préstamo</Form.Label>
+              <Form.Control type="date" required />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Fecha Devolución</Form.Label>
+              <Form.Control type="date" required />
+            </Form.Group>
+            <Button type="submit" variant="primary">
+              Crear Préstamo
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      <div className="d-flex flex-grow-1">
+        {/* Sidebar igual a homeLibrarian */}
+        <div className="d-none d-md-block bg-white border-end" style={{ width: '240px' }}>
+          <Nav className="flex-column p-3 gap-2">
+            <Nav.Link href="/homelibrarian" className="d-flex align-items-center gap-2 text-dark">
+              <BarChart3 size={20} />
+              Dashboard
+            </Nav.Link>
+            <Nav.Link href="/homelibrarian/users" className="d-flex align-items-center gap-2">
+              <Users size={20} />
+              Usuarios
+            </Nav.Link>
+            <Nav.Link
+              href="/homelibrarian/catalog"
+              className="d-flex align-items-center gap-2"
+            >
+              <BookOpen size={20} />
+              Catálogo
+            </Nav.Link>
+            <Nav.Link
+              href="/homelibrarian/prestamos"
+              className="d-flex align-items-center gap-2 active"
+              style={{
+                color: "#212529",
+                fontWeight: "bold",
+                background: "#e9ecef",
+                borderRadius: "0.375rem"
+              }}
+            >
+              <BookOpen size={20} />
+              Préstamos
+            </Nav.Link>
+            <Nav.Link href="/homelibrarian/reportes" className="d-flex align-items-center gap-2">
+              <FileText size={20} />
+              Reportes
+            </Nav.Link>
+          </Nav>
+        </div>
+
+        {/* Main Content */}
+        <main className="flex-grow-1 p-4">
+          <Container fluid>
+            <div className="mb-4">
+              <h1 className="h2 fw-bold">Gestión de Préstamos</h1>
+              <p className="text-muted">Administra los préstamos, solicitudes y devoluciones</p>
             </div>
 
-            {/* Stats Cards */}
-            <Row className="g-2 g-md-4 mb-3 mb-md-4">
-              <Col xs={12} sm={6} lg={3}>
-                <Card className="h-100">
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <Card.Title className="mb-0 text-muted small">Préstamos Activos</Card.Title>
-                      <BookOpen className="text-primary" />
-                    </div>
-                    <h2 className="mb-1">42</h2>
-                    <small className="text-muted">8 pendientes de aprobación</small>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col xs={12} sm={6} lg={3}>
-                <Card className="h-100">
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <Card.Title className="mb-0 text-muted small">Vencimientos Hoy</Card.Title>
-                      <Calendar className="text-danger" />
-                    </div>
-                    <h2 className="mb-1">7</h2>
-                    <small className="text-muted">3 con notificación enviada</small>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col xs={12} sm={6} lg={3}>
-                <Card className="h-100">
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <Card.Title className="mb-0 text-muted small">Devoluciones Hoy</Card.Title>
-                      <RefreshCw className="text-success" />
-                    </div>
-                    <h2 className="mb-1">12</h2>
-                    <small className="text-muted">5 ya procesadas</small>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col xs={12} sm={6} lg={3}>
-                <Card className="h-100">
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <Card.Title className="mb-0 text-muted small">Solicitudes Nuevas</Card.Title>
-                      <Plus className="text-purple" />
-                    </div>
-                    <h2 className="mb-1">15</h2>
-                    <small className="text-muted">8 en las últimas 24 horas</small>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
+            {/* Sin estadísticas ni exportar datos */}
 
             <Tab.Container defaultActiveKey="activos">
-              <Nav variant="tabs" className="mb-3 mb-md-4 flex-wrap">
+              <Nav variant="tabs" className="mb-3 flex-wrap">
                 <Nav.Item>
                   <Nav.Link eventKey="activos">Préstamos Activos</Nav.Link>
                 </Nav.Item>
@@ -166,6 +217,7 @@ export default function PrestamosPage() {
               </Nav>
 
               <Tab.Content>
+                {/* Préstamos Activos */}
                 <Tab.Pane eventKey="activos">
                   <Card>
                     <Card.Header className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
@@ -174,11 +226,7 @@ export default function PrestamosPage() {
                         <Card.Text className="text-muted">Gestiona los préstamos actualmente en curso</Card.Text>
                       </div>
                       <div className="d-flex gap-2">
-                        <Button variant="outline-secondary" size="sm">
-                          <Filter className="me-1" />
-                          Filtrar
-                        </Button>
-                        <Button variant="primary" size="sm">
+                        <Button variant="primary" size="sm" onClick={() => setShowNewPrestamo(true)}>
                           <Plus className="me-1" />
                           Nuevo Préstamo
                         </Button>
@@ -187,14 +235,13 @@ export default function PrestamosPage() {
                     <Card.Body>
                       <div className="d-flex flex-column flex-md-row gap-2 mb-3">
                         <Form.Control placeholder="Buscar por usuario o libro..." />
-                        <Form.Select style={{width: '180px', minWidth: '120px'}}>
+                        <Form.Select style={{ width: '180px', minWidth: '120px' }}>
                           <option>Todos</option>
                           <option>Normal</option>
                           <option>Próximo a vencer</option>
                           <option>Vencido</option>
                         </Form.Select>
                       </div>
-
                       <div className="table-responsive">
                         <Table striped bordered hover>
                           <thead>
@@ -228,15 +275,24 @@ export default function PrestamosPage() {
                                     Acciones
                                   </Dropdown.Toggle>
                                   <Dropdown.Menu>
-                                    <Dropdown.Item>
+                                    <Dropdown.Item onClick={() => handleShowDetails({
+                                      id: "P-1002",
+                                      usuario: "Carlos Rodríguez",
+                                      correo: "carlos.rodriguez@estudiantes.uci.cu",
+                                      año: "2do año",
+                                      libro: "Ingeniería de Software",
+                                      fechaPrestamo: "28/04/2025",
+                                      fechaDevolucion: "12/05/2025",
+                                      estado: "Activo"
+                                    })}>
                                       <Eye className="me-2" />
                                       Ver detalles
                                     </Dropdown.Item>
-                                    <Dropdown.Item>
+                                    <Dropdown.Item onClick={() => handleAction("El plazo fue extendido correctamente")}>
                                       <Clock className="me-2" />
                                       Extender plazo
                                     </Dropdown.Item>
-                                    <Dropdown.Item>
+                                    <Dropdown.Item onClick={() => handleAction("El préstamo fue marcado como devuelto")}>
                                       <XCircle className="me-2" />
                                       Marcar como devuelto
                                     </Dropdown.Item>
@@ -248,7 +304,6 @@ export default function PrestamosPage() {
                           </tbody>
                         </Table>
                       </div>
-
                       <div className="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-3">
                         <Button variant="outline-secondary" size="sm">Anterior</Button>
                         <Button variant="outline-secondary" size="sm">Siguiente</Button>
@@ -265,22 +320,17 @@ export default function PrestamosPage() {
                         <Card.Title>Solicitudes Pendientes</Card.Title>
                         <Card.Text className="text-muted">Gestiona las solicitudes de préstamo pendientes de aprobación</Card.Text>
                       </div>
-                      <Button variant="outline-secondary" size="sm">
-                        <Filter className="me-1" />
-                        Filtrar
-                      </Button>
                     </Card.Header>
                     <Card.Body>
                       <div className="d-flex gap-2 mb-3">
                         <Form.Control placeholder="Buscar por usuario o libro..." />
-                        <Form.Select style={{width: '180px'}}>
+                        <Form.Select style={{ width: '180px' }}>
                           <option>Todos</option>
                           <option>Alta</option>
                           <option>Media</option>
                           <option>Baja</option>
                         </Form.Select>
                       </div>
-
                       <Table striped bordered hover>
                         <thead>
                           <tr>
@@ -311,15 +361,24 @@ export default function PrestamosPage() {
                                   Acciones
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>
-                                  <Dropdown.Item>
+                                  <Dropdown.Item onClick={() => handleShowDetails({
+                                    id: "P-1001",
+                                    usuario: "María González",
+                                    correo: "maria.gonzalez@estudiantes.uci.cu",
+                                    año: "3er año",
+                                    libro: "Fundamentos de Bases de Datos",
+                                    fechaPrestamo: "-",
+                                    fechaDevolucion: "-",
+                                    estado: "Pendiente"
+                                  })}>
                                     <Eye className="me-2" />
                                     Ver detalles
                                   </Dropdown.Item>
-                                  <Dropdown.Item>
+                                  <Dropdown.Item onClick={() => handleAction("La solicitud fue aprobada")}>
                                     <CheckCircle className="me-2" />
                                     Aprobar
                                   </Dropdown.Item>
-                                  <Dropdown.Item>
+                                  <Dropdown.Item onClick={() => handleAction("La solicitud fue rechazada")}>
                                     <XCircle className="me-2" />
                                     Rechazar
                                   </Dropdown.Item>
@@ -330,7 +389,6 @@ export default function PrestamosPage() {
                           {/* Más filas... */}
                         </tbody>
                       </Table>
-
                       <div className="d-flex justify-content-end gap-2 mt-3">
                         <Button variant="outline-secondary" size="sm">Anterior</Button>
                         <Button variant="outline-secondary" size="sm">Siguiente</Button>
@@ -348,11 +406,7 @@ export default function PrestamosPage() {
                         <Card.Text className="text-muted">Gestiona los préstamos que han superado su fecha de devolución</Card.Text>
                       </div>
                       <div className="d-flex gap-2">
-                        <Button variant="outline-secondary" size="sm">
-                          <Filter className="me-1" />
-                          Filtrar
-                        </Button>
-                        <Button variant="outline-secondary" size="sm">
+                        <Button variant="outline-secondary" size="sm" onClick={handleNotificarTodos}>
                           <Bell className="me-1" />
                           Notificar a todos
                         </Button>
@@ -361,14 +415,13 @@ export default function PrestamosPage() {
                     <Card.Body>
                       <div className="d-flex gap-2 mb-3">
                         <Form.Control placeholder="Buscar por usuario o libro..." />
-                        <Form.Select style={{width: '180px'}}>
+                        <Form.Select style={{ width: '180px' }}>
                           <option>Todos</option>
                           <option>1-7 días</option>
                           <option>8-15 días</option>
                           <option>Más de 15 días</option>
                         </Form.Select>
                       </div>
-
                       <Table striped bordered hover>
                         <thead>
                           <tr>
@@ -397,15 +450,24 @@ export default function PrestamosPage() {
                                   Acciones
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>
-                                  <Dropdown.Item>
+                                  <Dropdown.Item onClick={() => handleShowDetails({
+                                    id: "P-1003",
+                                    usuario: "Ana Martínez",
+                                    correo: "ana.martinez@estudiantes.uci.cu",
+                                    año: "4to año",
+                                    libro: "Algoritmos y Estructuras de Datos",
+                                    fechaPrestamo: "-",
+                                    fechaDevolucion: "-",
+                                    estado: "Vencido"
+                                  })}>
                                     <Eye className="me-2" />
                                     Ver detalles
                                   </Dropdown.Item>
-                                  <Dropdown.Item>
+                                  <Dropdown.Item onClick={() => handleAction("Se envió un recordatorio al usuario")}>
                                     <Bell className="me-2" />
                                     Enviar recordatorio
                                   </Dropdown.Item>
-                                  <Dropdown.Item>
+                                  <Dropdown.Item onClick={() => handleAction("El préstamo fue marcado como devuelto")}>
                                     <XCircle className="me-2" />
                                     Marcar como devuelto
                                   </Dropdown.Item>
@@ -416,7 +478,6 @@ export default function PrestamosPage() {
                           {/* Más filas... */}
                         </tbody>
                       </Table>
-
                       <div className="d-flex justify-content-end gap-2 mt-3">
                         <Button variant="outline-secondary" size="sm">Anterior</Button>
                         <Button variant="outline-secondary" size="sm">Siguiente</Button>
@@ -433,28 +494,17 @@ export default function PrestamosPage() {
                         <Card.Title>Historial de Préstamos</Card.Title>
                         <Card.Text className="text-muted">Consulta el historial completo de préstamos realizados</Card.Text>
                       </div>
-                      <div className="d-flex gap-2">
-                        <Button variant="outline-secondary" size="sm">
-                          <Filter className="me-1" />
-                          Filtrar
-                        </Button>
-                        <Button variant="outline-secondary" size="sm">
-                          <Download className="me-1" />
-                          Exportar
-                        </Button>
-                      </div>
                     </Card.Header>
                     <Card.Body>
                       <div className="d-flex gap-2 mb-3">
                         <Form.Control placeholder="Buscar por usuario o libro..." />
-                        <Form.Select style={{width: '180px'}}>
+                        <Form.Select style={{ width: '180px' }}>
                           <option>Todos</option>
                           <option>Completados</option>
                           <option>Cancelados</option>
                           <option>Vencidos</option>
                         </Form.Select>
                       </div>
-
                       <Table striped bordered hover>
                         <thead>
                           <tr>
@@ -478,7 +528,16 @@ export default function PrestamosPage() {
                               <Badge bg="success">Completado</Badge>
                             </td>
                             <td className="text-end">
-                              <Button variant="link" size="sm">
+                              <Button variant="link" size="sm" onClick={() => handleShowDetails({
+                                id: "P-950",
+                                usuario: "María González",
+                                correo: "-",
+                                año: "-",
+                                libro: "Programación en Java",
+                                fechaPrestamo: "10/04/2025",
+                                fechaDevolucion: "24/04/2025",
+                                estado: "Completado"
+                              })}>
                                 <Eye className="me-2" />
                                 Ver detalles
                               </Button>
@@ -487,7 +546,6 @@ export default function PrestamosPage() {
                           {/* Más filas... */}
                         </tbody>
                       </Table>
-
                       <div className="d-flex justify-content-end gap-2 mt-3">
                         <Button variant="outline-secondary" size="sm">Anterior</Button>
                         <Button variant="outline-secondary" size="sm">Siguiente</Button>
@@ -497,9 +555,9 @@ export default function PrestamosPage() {
                 </Tab.Pane>
               </Tab.Content>
             </Tab.Container>
-          </Col>
-        </Row>
-      </Container>
+          </Container>
+        </main>
+      </div>
     </div>
   );
 }
