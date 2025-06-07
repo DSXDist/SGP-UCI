@@ -18,26 +18,39 @@ const LoginPage = () => {
 
     if (!username || !password) {
       setError('Por favor, complete todos los campos');
-      setTimeout(() => setError(''), 3000); // Oculta el error después de 3 segundos
+      setTimeout(() => setError(''), 3000);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Aqui cambiar para manejar la autenticación real
-      // Simulación de autenticación
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      localStorage.setItem('sgp-uci-username', username);
+      const response = await fetch('http://127.0.0.1:8000/library/api-token-auth/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-      if (username.includes('admin')) {
-        navigate('/homelibrarian');
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        localStorage.setItem('sgp-uci-username', username);
+        localStorage.setItem('sgp-uci-token', data.token);
+        localStorage.setItem('sgp-uci-is_bibliotecario', data.is_bibliotecario); // Guarda is_bibliotecario
+
+        // Verifica is_bibliotecario y redirige
+        if (data.is_bibliotecario) {
+          navigate('/homelibrarian');
+        } else {
+          navigate('/home');
+        }
       } else {
-        navigate('/home');
+        setError(data.non_field_errors ? data.non_field_errors[0] : 'Error al iniciar sesión. Verifique sus credenciales.');
       }
     } catch (err) {
-      setError('Error al iniciar sesión. Verifique sus credenciales.');
+      setError('Error de conexión con el servidor.');
     } finally {
       setIsLoading(false);
     }
