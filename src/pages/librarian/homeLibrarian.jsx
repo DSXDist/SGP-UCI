@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Navbar,
   Nav,
@@ -40,6 +40,12 @@ import {
 
 export default function AdminDashboard() {
   const [showModal, setShowModal] = React.useState(false);
+  const [stats, setStats] = useState({
+    loans: 0,
+    users: 0,
+    books: 0,
+    vencimientos: 0,
+  });
 
   // Obtener nombre de usuario desde localStorage (como en login)
   let username = 'Bibliotecario';
@@ -53,8 +59,70 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('sgp-uci-username');
+    localStorage.removeItem('sgp-uci-token');
+    localStorage.removeItem('sgp-uci-id');
     window.location.href = '/';
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('sgp-uci-token');
+    const headers = {
+      'Authorization': `Token ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    const fetchStats = async () => {
+      try {
+        // Préstamos activos y vencimientos
+        const loansRes = await fetch('http://localhost:8000/library/api/loans', {
+          method: 'GET',
+          headers
+        });
+        const loansData = await loansRes.json();
+        const activos = loansData.filter(l => l.status === 'ACTIVE').length;
+        const vencidos = loansData.filter(l => l.status === 'OFFDATE').length;
+
+        // Usuarios registrados
+        const usersRes = await fetch('http://localhost:8000/library/api/users', {
+          method: 'GET',
+          headers
+        });
+        const usersData = await usersRes.json();
+
+        // Libros disponibles (nuevo formato de fetch)
+        fetch('http://localhost:8000/library/api/books/', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+          .then(res => res.json())
+          .then(data => {
+            setStats(prev => ({
+              ...prev,
+              loans: activos,
+              vencimientos: vencidos,
+              users: usersData.length,
+              books: data.length // o el conteo que necesites
+            }));
+          })
+          .catch(() => {
+            setStats(prev => ({
+              ...prev,
+              loans: activos,
+              vencimientos: vencidos,
+              users: usersData.length,
+              books: 0
+            }));
+          });
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
@@ -68,7 +136,7 @@ export default function AdminDashboard() {
               <Badge bg="secondary" className="ms-2 align-self-center">Administrador</Badge>
             </div>
             <div className="ms-auto d-flex align-items-center gap-3">
-              
+
               <div className="d-flex align-items-center gap-2">
                 <Button variant="link" className="d-flex align-items-center gap-2 text-dark text-decoration-none p-0">
                   <User className="rounded-circle bg-light border" size={32} />
@@ -131,10 +199,30 @@ export default function AdminDashboard() {
             {/* Stats Cards */}
             <Row className="g-4 mb-4">
               {[
-                { title: 'Préstamos Activos', value: '42', icon: <BookOpen className="text-primary" size={32} />, subtitle: '8 pendientes de aprobación' },
-                { title: 'Usuarios Registrados', value: '156', icon: <Users className="text-success" size={32} />, subtitle: '12 nuevos este mes' },
-                { title: 'Vencimientos Hoy', value: '7', icon: <Calendar className="text-danger" size={32} />, subtitle: '3 con notificación enviada' },
-                { title: 'Libros Disponibles', value: '1,254', icon: <BookOpen className="text-purple" size={32} />, subtitle: '85% del inventario total' }
+                {
+                  title: 'Préstamos Activos',
+                  value: stats.loans,
+                  icon: <BookOpen className="text-primary" size={32} />,
+                  subtitle: 'Pendientes de aprobación'
+                },
+                {
+                  title: 'Usuarios Registrados',
+                  value: stats.users,
+                  icon: <Users className="text-success" size={32} />,
+                  subtitle: 'Nuevos este mes'
+                },
+                {
+                  title: `Vencimientos Hoy (${stats.vencimientos})`,
+                  value: stats.vencimientos,
+                  icon: <Calendar className="text-danger" size={32} />,
+                  subtitle: 'Con notificación enviada'
+                },
+                {
+                  title: 'Libros Disponibles',
+                  value: stats.books,
+                  icon: <BookOpen className="text-purple" size={32} />,
+                  subtitle: 'Inventario total'
+                }
               ].map((card, index) => (
                 <Col key={index} md={6} lg={3}>
                   <Card>

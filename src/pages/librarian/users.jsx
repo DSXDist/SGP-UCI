@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   BookOpen,
@@ -44,197 +44,6 @@ import {
   InputGroup
 } from 'react-bootstrap';
 
-// Datos de ejemplo (mantener igual)
-const usuariosEjemplo = [{
-    id: "U-1001",
-    nombre: "María González",
-    email: "maria.gonzalez@estudiantes.uci.cu",
-    correoCorto: "gonzalezm",
-    tipo: "Estudiante",
-    añoAcademico: "3er año",
-    facultad: "Facultad 1",
-    carrera: "Ingeniería Informática",
-    telefono: "+53 55123456",
-    fechaRegistro: "15/01/2023",
-    prestamosActivos: 2,
-    prestamosTotales: 15,
-    estado: "Activo",
-    prestamos: [
-      {
-        id: "P-1001",
-        libro: "Fundamentos de Bases de Datos",
-        fechaPrestamo: "01/05/2025",
-        fechaDevolucion: "15/05/2025",
-        estado: "Activo",
-      },
-      {
-        id: "P-1005",
-        libro: "Programación en Java",
-        fechaPrestamo: "28/04/2025",
-        fechaDevolucion: "12/05/2025",
-        estado: "Activo",
-      },
-    ],
-    prestamosPendientes: [
-      {
-        id: "P-2001",
-        libro: "Inteligencia Artificial: Un Enfoque Moderno",
-        fechaSolicitud: "10/05/2025",
-        estado: "Pendiente",
-      },
-    ],
-  },
-  {
-    id: "U-1002",
-    nombre: "Carlos Rodríguez",
-    email: "carlos.rodriguez@estudiantes.uci.cu",
-    correoCorto: "rodriguezc",
-    tipo: "Estudiante",
-    añoAcademico: "2do año",
-    facultad: "Facultad 3",
-    carrera: "Ingeniería en Ciencias Informáticas",
-    telefono: "+53 54789012",
-    fechaRegistro: "20/02/2023",
-    prestamosActivos: 1,
-    prestamosTotales: 8,
-    estado: "Activo",
-    prestamos: [
-      {
-        id: "P-1002",
-        libro: "Ingeniería de Software",
-        fechaPrestamo: "28/04/2025",
-        fechaDevolucion: "12/05/2025",
-        estado: "Activo",
-      },
-    ],
-    prestamosPendientes: [],
-  },
-  {
-    id: "U-1003",
-    nombre: "Pedro Sánchez",
-    email: "pedro.sanchez@profesores.uci.cu",
-    correoCorto: "sanchezp",
-    tipo: "Profesor",
-    añoAcademico: "N/A",
-    facultad: "Facultad 2",
-    carrera: "N/A",
-    telefono: "+53 52345678",
-    fechaRegistro: "05/09/2022",
-    prestamosActivos: 3,
-    prestamosTotales: 27,
-    estado: "Activo",
-    prestamos: [
-      {
-        id: "P-1003",
-        libro: "Algoritmos y Estructuras de Datos",
-        fechaPrestamo: "25/04/2025",
-        fechaDevolucion: "09/05/2025",
-        estado: "Activo",
-      },
-      {
-        id: "P-1006",
-        libro: "Redes de Computadoras",
-        fechaPrestamo: "30/04/2025",
-        fechaDevolucion: "14/05/2025",
-        estado: "Activo",
-      },
-      {
-        id: "P-1007",
-        libro: "Sistemas Operativos",
-        fechaPrestamo: "02/05/2025",
-        fechaDevolucion: "16/05/2025",
-        estado: "Activo",
-      },
-    ],
-    prestamosPendientes: [
-      {
-        id: "P-2002",
-        libro: "Compiladores: Principios, Técnicas y Herramientas",
-        fechaSolicitud: "09/05/2025",
-        estado: "Pendiente",
-      },
-    ],
-  },
-  {
-    id: "U-1004",
-    nombre: "Ana Martínez",
-    email: "ana.martinez@estudiantes.uci.cu",
-    correoCorto: "martineza",
-    tipo: "Estudiante",
-    añoAcademico: "4to año",
-    facultad: "Facultad 4",
-    carrera: "Ingeniería en Ciencias Informáticas",
-    telefono: "+53 51234567",
-    fechaRegistro: "10/03/2023",
-    prestamosActivos: 0,
-    prestamosTotales: 12,
-    estado: "Activo",
-    prestamos: [],
-    prestamosPendientes: [
-      {
-        id: "P-2003",
-        libro: "Diseño de Interfaces de Usuario",
-        fechaSolicitud: "08/05/2025",
-        estado: "Pendiente",
-      },
-    ],
-  },
-  {
-    id: "U-1005",
-    nombre: "Luis Fernández",
-    email: "luis.fernandez@estudiantes.uci.cu",
-    correoCorto: "fernandezl",
-    tipo: "Estudiante",
-    añoAcademico: "1er año",
-    facultad: "Facultad 5",
-    carrera: "Ingeniería Informática",
-    telefono: "+53 58765432",
-    fechaRegistro: "25/04/2023",
-    prestamosActivos: 1,
-    prestamosTotales: 3,
-    estado: "Activo",
-    prestamos: [
-      {
-        id: "P-1004",
-        libro: "Introducción a la Programación",
-        fechaPrestamo: "05/05/2025",
-        fechaDevolucion: "19/05/2025",
-        estado: "Activo",
-      },
-    ],
-    prestamosPendientes: [],
-  },]; 
-const prestamosPendientesEjemplo = [{
-    id: "P-2001",
-    usuario: "María González",
-    usuarioId: "U-1001",
-    correo: "gonzalezm",
-    añoAcademico: "3er año",
-    libro: "Inteligencia Artificial: Un Enfoque Moderno",
-    fechaSolicitud: "10/05/2025",
-    estado: "Pendiente",
-  },
-  {
-    id: "P-2002",
-    usuario: "Pedro Sánchez",
-    usuarioId: "U-1003",
-    correo: "sanchezp",
-    añoAcademico: "N/A",
-    libro: "Compiladores: Principios, Técnicas y Herramientas",
-    fechaSolicitud: "09/05/2025",
-    estado: "Pendiente",
-  },
-  {
-    id: "P-2003",
-    usuario: "Ana Martínez",
-    usuarioId: "U-1004",
-    correo: "martineza",
-    añoAcademico: "4to año",
-    libro: "Diseño de Interfaces de Usuario",
-    fechaSolicitud: "08/05/2025",
-    estado: "Pendiente",
-  },];
-
 export default function GestionUsuariosPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -245,7 +54,69 @@ export default function GestionUsuariosPage() {
   const [filterType, setFilterType] = useState("todos");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [activeTab, setActiveTab] = useState("usuarios");
-  const [showUserModal, setShowUserModal] = useState(false); // Nuevo estado para el modal de detalles
+  const [showUserModal, setShowUserModal] = useState(false);
+
+  // Nuevo estado para usuarios traídos del backend
+  const [usuarios, setUsuarios] = useState([]);
+  const [loadingUsuarios, setLoadingUsuarios] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('sgp-uci-token');
+    setLoadingUsuarios(true);
+    fetch('http://localhost:8000/library/api/users/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        // Filtrar usuarios que no son bibliotecarios
+        const usuariosFiltrados = data.filter(u => !u.is_bibliotecario);
+        setUsuarios(usuariosFiltrados);
+        setLoadingUsuarios(false);
+      })
+      .catch(() => {
+        setUsuarios([]);
+        setLoadingUsuarios(false);
+      });
+  }, []);
+
+  // Adaptar los datos del backend al formato esperado por la UI
+  const usuariosAdaptados = usuarios.map(u => ({
+    id: u.id,
+    nombre: u.username,
+    email: u.email,
+    correoCorto: u.username,
+    tipo: u.user_type === "STUDENT" ? "Estudiante" : u.user_type === "PROFESSOR" ? "Profesor" : u.user_type,
+    añoAcademico: u.academic_year || "N/A",
+    facultad: u.faculty || "N/A",
+    carrera: u.career || "N/A",
+    telefono: u.phone || "",
+    fechaRegistro: u.date_joined ? new Date(u.date_joined).toLocaleDateString() : "",
+    prestamosActivos: Array.isArray(u.loans) ? u.loans.filter(l => l.status === "Activo").length : 0,
+    prestamosTotales: Array.isArray(u.loans) ? u.loans.length : 0,
+    estado: u.is_active === false ? "Inactivo" : "Activo",
+    prestamos: u.loans || [],
+    prestamosPendientes: [], // Puedes mapear si tu backend lo soporta
+  }));
+
+  const [filteredUsers, setFilteredUsers] = useState(usuariosAdaptados);
+
+  useEffect(() => {
+    setFilteredUsers(
+      usuariosAdaptados.filter((usuario) => {
+        const tipoMatch = filterType === "todos" || usuario.tipo.toLowerCase() === filterType;
+        const estadoMatch = filterStatus === "todos" || usuario.estado.toLowerCase() === filterStatus;
+        const searchMatch =
+          usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          usuario.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          usuario.correoCorto.toLowerCase().includes(searchTerm.toLowerCase());
+        return tipoMatch && estadoMatch && searchMatch;
+      })
+    );
+  }, [searchTerm, filterType, filterStatus, usuariosAdaptados]);
 
   // Funciones de manejo (mantener igual)
   const handleUserSelect = (user) => {
@@ -257,13 +128,30 @@ export default function GestionUsuariosPage() {
     setShowEditModal(true);
   };
   const handleDeleteUser = (userId) => {
-    setSelectedUser(usuariosEjemplo.find(u => u.id === userId));
+    // Aquí iría la lógica para eliminar el usuario
+    setSelectedUser(filteredUsers.find(u => u.id === userId));
     setShowDeleteAlert(true);
   };
-  const confirmDeleteUser = () => {
-    setShowDeleteAlert(false);
-    setSelectedUser(null);
-    // Aquí iría la lógica para eliminar el usuario
+  const confirmDeleteUser = async () => {
+    if (!selectedUser) return;
+    const token = localStorage.getItem('sgp-uci-token');
+    try {
+      const res = await fetch(`http://localhost:8000/library/api/users/${selectedUser.id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        setUsuarios((prev) => prev.filter((u) => u.id !== selectedUser.id));
+      }
+      setShowDeleteAlert(false);
+      setSelectedUser(null);
+    } catch (err) {
+      setShowDeleteAlert(false);
+      setSelectedUser(null);
+    }
   };
   const handleApproveLoan = (loanId) => {
     // Aquí iría la lógica para aprobar el préstamo
@@ -271,10 +159,10 @@ export default function GestionUsuariosPage() {
   const handleRejectLoan = (loanId) => {
     // Aquí iría la lógica para rechazar el préstamo
   };
-  const handleAddUser = (data) => {
-    setShowAddModal(false);
-    // Aquí iría la lógica para añadir el usuario
-  };
+  // const handleAddUser = (data) => {
+  //   setShowAddModal(false);
+  //   // Aquí iría la lógica para añadir el usuario
+  // };
   const handleUpdateUser = (data) => {
     setShowEditModal(false);
     // Aquí iría la lógica para actualizar el usuario
@@ -282,20 +170,6 @@ export default function GestionUsuariosPage() {
   const handleBackToList = () => {
     setSelectedUser(null);
   };
-
-  const filteredUsers = usuariosEjemplo.filter((usuario) => {
-    // Filtrar por tipo
-    const tipoMatch = filterType === "todos" || usuario.tipo.toLowerCase() === filterType;
-    // Filtrar por estado
-    const estadoMatch = filterStatus === "todos" || usuario.estado.toLowerCase() === filterStatus;
-    // Filtrar por búsqueda
-    const searchMatch =
-      usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      usuario.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      usuario.correoCorto.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return tipoMatch && estadoMatch && searchMatch;
-  });
 
   // Obtener nombre de usuario desde localStorage (igual que en homeLibrarian)
   let username = 'Bibliotecario';
@@ -310,6 +184,81 @@ export default function GestionUsuariosPage() {
   const handleLogout = () => {
     localStorage.removeItem('sgp-uci-username');
     window.location.href = '/';
+  };
+
+  // Estado para el formulario de añadir usuario
+  const [addUserForm, setAddUserForm] = useState({
+    nombre: "",
+    email: "",
+    tipo: "Estudiante",
+    facultad: "",
+    carrera: "",
+    añoAcademico: "",
+    estado: "Activo",
+    contraseña: "",
+  });
+  const [addUserError, setAddUserError] = useState("");
+  const [addUserSuccess, setAddUserSuccess] = useState("");
+
+  // Manejar cambios en el formulario de añadir usuario
+  const handleAddUserChange = (e) => {
+    const { name, value } = e.target;
+    setAddUserForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Añadir usuario
+  const handleAddUser = async () => {
+    setAddUserError("");
+    setAddUserSuccess("");
+    const token = localStorage.getItem('sgp-uci-token');
+    try {
+      const res = await fetch('http://localhost:8000/library/api/users/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: addUserForm.nombre,
+          email: addUserForm.email,
+          user_type: addUserForm.tipo.toUpperCase(),
+          faculty: addUserForm.facultad,
+          career: addUserForm.carrera,
+          academic_year: addUserForm.añoAcademico,
+          is_active: addUserForm.estado === "Activo",
+          is_bibliotecario: false,
+          password: addUserForm.contraseña
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        setAddUserError(
+          errorData.detail ||
+          Object.values(errorData).flat().join(" ") ||
+          "Error al añadir el usuario"
+        );
+        return;
+      }
+      const newUser = await res.json();
+      setAddUserSuccess("Usuario añadido satisfactoriamente");
+      setUsuarios((prev) => [...prev, newUser]);
+      setShowAddModal(false);
+      setAddUserForm({
+        nombre: "",
+        email: "",
+        tipo: "Estudiante",
+        facultad: "",
+        carrera: "",
+        añoAcademico: "",
+        estado: "Activo",
+        contraseña: "",
+      });
+    } catch (err) {
+      setAddUserError("Error de red al añadir el usuario");
+    }
   };
 
   // Componente principal
@@ -467,40 +416,50 @@ export default function GestionUsuariosPage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {filteredUsers.map((usuario) => (
-                              <tr key={usuario.id} style={{cursor: 'pointer'}}>
-                                <td onClick={() => handleUserSelect(usuario)}>{usuario.id}</td>
-                                <td onClick={() => handleUserSelect(usuario)}>{usuario.nombre}</td>
-                                <td onClick={() => handleUserSelect(usuario)}>{usuario.correoCorto}</td>
-                                <td onClick={() => handleUserSelect(usuario)}>{usuario.tipo}</td>
-                                <td onClick={() => handleUserSelect(usuario)}>{usuario.añoAcademico}</td>
-                                <td onClick={() => handleUserSelect(usuario)}>{usuario.prestamosActivos}</td>
-                                <td onClick={() => handleUserSelect(usuario)}>
-                                  <Badge bg={usuario.estado === "Activo" ? "success" : "danger"}>
-                                    {usuario.estado}
-                                  </Badge>
-                                </td>
-                                <td className="text-end">
-                                  <Dropdown>
-                                    <Dropdown.Toggle variant="link">
-                                      Acciones
-                                    </Dropdown.Toggle>
-                                    <Dropdown.Menu>
-                                      <Dropdown.Item onClick={() => handleUserSelect(usuario)}>
-                                        <Eye className="me-2" /> Ver detalles
-                                      </Dropdown.Item>
-                                      <Dropdown.Item onClick={() => handleEditUser(usuario)}>
-                                        <Edit className="me-2" /> Editar
-                                      </Dropdown.Item>
-                                      <Dropdown.Divider />
-                                      <Dropdown.Item onClick={() => handleDeleteUser(usuario.id)} className="text-danger">
-                                        <Trash2 className="me-2" /> Eliminar
-                                      </Dropdown.Item>
-                                    </Dropdown.Menu>
-                                  </Dropdown>
-                                </td>
+                            {loadingUsuarios ? (
+                              <tr>
+                                <td colSpan={8} className="text-center">Cargando usuarios...</td>
                               </tr>
-                            ))}
+                            ) : filteredUsers.length === 0 ? (
+                              <tr>
+                                <td colSpan={8} className="text-center">No hay usuarios encontrados.</td>
+                              </tr>
+                            ) : (
+                              filteredUsers.map((usuario) => (
+                                <tr key={usuario.id} style={{cursor: 'pointer'}}>
+                                  <td onClick={() => handleUserSelect(usuario)}>{usuario.id}</td>
+                                  <td onClick={() => handleUserSelect(usuario)}>{usuario.nombre}</td>
+                                  <td onClick={() => handleUserSelect(usuario)}>{usuario.correoCorto}</td>
+                                  <td onClick={() => handleUserSelect(usuario)}>{usuario.tipo}</td>
+                                  <td onClick={() => handleUserSelect(usuario)}>{usuario.añoAcademico}</td>
+                                  <td onClick={() => handleUserSelect(usuario)}>{usuario.prestamosActivos}</td>
+                                  <td onClick={() => handleUserSelect(usuario)}>
+                                    <Badge bg={usuario.estado === "Activo" ? "success" : "danger"}>
+                                      {usuario.estado}
+                                    </Badge>
+                                  </td>
+                                  <td className="text-end">
+                                    <Dropdown>
+                                      <Dropdown.Toggle variant="link">
+                                        Acciones
+                                      </Dropdown.Toggle>
+                                      <Dropdown.Menu>
+                                        <Dropdown.Item onClick={() => handleUserSelect(usuario)}>
+                                          <Eye className="me-2" /> Ver detalles
+                                        </Dropdown.Item>
+                                        <Dropdown.Item onClick={() => handleEditUser(usuario)}>
+                                          <Edit className="me-2" /> Editar
+                                        </Dropdown.Item>
+                                        <Dropdown.Divider />
+                                        <Dropdown.Item onClick={() => handleDeleteUser(usuario.id)} className="text-danger">
+                                          <Trash2 className="me-2" /> Eliminar
+                                        </Dropdown.Item>
+                                      </Dropdown.Menu>
+                                    </Dropdown>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
                           </tbody>
                         </Table>
                       </Card.Body>
@@ -576,10 +535,7 @@ export default function GestionUsuariosPage() {
                 <div className="mb-3">
                   <User className="text-primary" size={64} />
                 </div>
-                <h3>{selectedUser.nombre}</h3>
-                <Badge bg={selectedUser.estado === "Activo" ? "success" : "danger"}>
-                  {selectedUser.estado}
-                </Badge>
+                <h3>{selectedUser.username}</h3>
               </div>
 
               <Card className="mb-4">
@@ -588,12 +544,6 @@ export default function GestionUsuariosPage() {
                   <div className="list-group">
                     <div className="list-group-item border-0">
                       <Mail className="me-2" /> {selectedUser.email}
-                    </div>
-                    <div className="list-group-item border-0">
-                      <Phone className="me-2" /> {selectedUser.telefono}
-                    </div>
-                    <div className="list-group-item border-0">
-                      <Calendar className="me-2" /> Registro: {selectedUser.fechaRegistro}
                     </div>
                   </div>
                 </Card.Body>
@@ -613,6 +563,9 @@ export default function GestionUsuariosPage() {
                     )}
                     <div className="list-group-item border-0">
                       <BookOpen className="me-2" /> {selectedUser.facultad}
+                    </div>
+                    <div className="list-group-item border-0">
+                      <BookMarked className="me-2" /> {selectedUser.carrera}
                     </div>
                   </div>
                 </Card.Body>
@@ -650,21 +603,103 @@ export default function GestionUsuariosPage() {
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Label>Nombre completo</Form.Label>
-                <Form.Control placeholder="Nombre y apellidos" />
+                <Form.Control
+                  name="nombre"
+                  value={addUserForm.nombre}
+                  onChange={handleAddUserChange}
+                  placeholder="Nombre y apellidos"
+                  required
+                />
               </Col>
               <Col md={6}>
                 <Form.Label>Correo electrónico</Form.Label>
-                <Form.Control type="email" placeholder="correo@estudiantes.uci.cu" />
+                <Form.Control
+                  type="email"
+                  name="email"
+                  value={addUserForm.email}
+                  onChange={handleAddUserChange}
+                  placeholder="correo@estudiantes.uci.cu"
+                  required
+                />
               </Col>
             </Row>
-            {/* Resto del formulario... */}
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Label>Tipo</Form.Label>
+                <Form.Select
+                  name="tipo"
+                  value={addUserForm.tipo}
+                  onChange={handleAddUserChange}
+                >
+                  <option>Estudiante</option>
+                  <option>Profesor</option>
+                  <option>Personal</option>
+                </Form.Select>
+              </Col>
+              <Col md={6}>
+                <Form.Label>Contraseña</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="contraseña"
+                  value={addUserForm.contraseña}
+                  onChange={handleAddUserChange}
+                  placeholder="Contraseña"
+                  required
+                />
+              </Col>
+            </Row>
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Label>Facultad</Form.Label>
+                <Form.Control
+                  name="facultad"
+                  value={addUserForm.facultad}
+                  onChange={handleAddUserChange}
+                />
+              </Col>
+              <Col md={6}>
+                <Form.Label>Carrera</Form.Label>
+                <Form.Control
+                  name="carrera"
+                  value={addUserForm.carrera}
+                  onChange={handleAddUserChange}
+                />
+              </Col>
+            </Row>
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Label>Año Académico</Form.Label>
+                <Form.Control
+                  name="añoAcademico"
+                  value={addUserForm.añoAcademico}
+                  onChange={handleAddUserChange}
+                />
+              </Col>
+              <Col md={6}>
+                <Form.Label>Estado</Form.Label>
+                <Form.Select
+                  name="estado"
+                  value={addUserForm.estado}
+                  onChange={handleAddUserChange}
+                >
+                  <option>Activo</option>
+                  <option>Inactivo</option>
+                </Form.Select>
+              </Col>
+            </Row>
+            {addUserError && (
+              <div className="alert alert-danger py-2">{addUserError}</div>
+            )}
+            {addUserSuccess && (
+              <div className="alert alert-success py-2">{addUserSuccess}</div>
+            )}
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowAddModal(false)}>
             Cancelar
           </Button>
-          <Button variant="primary" onClick={() => handleAddUser({})}>
+          <Button variant="primary" onClick={handleAddUser}>
             Guardar
           </Button>
         </Modal.Footer>
@@ -687,7 +722,7 @@ export default function GestionUsuariosPage() {
                 <Col md={6}>
                   <Form.Label>Nombre completo</Form.Label>
                   <Form.Control
-                    defaultValue={selectedUser.nombre}
+                    defaultValue={selectedUser.username}
                     required
                   />
                 </Col>
@@ -703,17 +738,11 @@ export default function GestionUsuariosPage() {
               <Row className="mb-3">
                 <Col md={6}>
                   <Form.Label>Tipo</Form.Label>
-                  <Form.Select defaultValue={selectedUser.tipo}>
+                  <Form.Select defaultValue={selectedUser.user_type}>
                     <option>Estudiante</option>
                     <option>Profesor</option>
                     <option>Personal</option>
                   </Form.Select>
-                </Col>
-                <Col md={6}>
-                  <Form.Label>Teléfono</Form.Label>
-                  <Form.Control
-                    defaultValue={selectedUser.telefono}
-                  />
                 </Col>
               </Row>
               <Row className="mb-3">

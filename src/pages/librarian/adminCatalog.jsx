@@ -34,272 +34,6 @@ import {
   Trash2
 } from "lucide-react";
 
-const categorias = [
-  "Algoritmos",
-  "Bases de Datos",
-  "Ingeniería de Software",
-  "Inteligencia Artificial",
-  "Programación",
-  "Redes",
-  "Sistemas Operativos"
-];
-
-// Puedes reutilizar los datos de ejemplo de libros aquí
-const librosEjemplo = [
-  {
-    id: 1,
-    titulo: "Fundamentos de Bases de Datos",
-    autor: "Abraham Silberschatz, Henry F. Korth",
-    editorial: "McGraw-Hill",
-    año: 2019,
-    edicion: "7ma Edición",
-    categoria: "Bases de Datos",
-    disponible: true,
-    copias: 3,
-    ubicacion: "Estante A-12",
-    isbn: "978-0073523323",
-    descripcion:
-        "Este libro proporciona una introducción completa a los sistemas de bases de datos, cubriendo los fundamentos, el diseño y la implementación. Incluye temas como el modelo relacional, SQL, diseño de bases de datos y procesamiento de transacciones.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.5,
-    prestamos: 42,
-    paginas: 672,
-    idioma: "Español",
-    temas: ["SQL", "Modelo Relacional", "Normalización", "Transacciones"],
-},
-{
-    id: 2,
-    titulo: "Ingeniería de Software",
-    autor: "Ian Sommerville",
-    editorial: "Pearson",
-    año: 2016,
-    edicion: "10ma Edición",
-    categoria: "Ingeniería de Software",
-    disponible: true,
-    copias: 2,
-    ubicacion: "Estante B-05",
-    isbn: "978-0133943030",
-    descripcion:
-        "Este libro es una introducción completa a la ingeniería de software. Cubre todo el proceso de desarrollo de software, desde la especificación de requisitos hasta la evolución del software, con énfasis en las prácticas de ingeniería de software ágil.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.2,
-    prestamos: 38,
-    paginas: 816,
-    idioma: "Español",
-    temas: ["Metodologías Ágiles", "Requisitos", "Diseño de Software", "Pruebas"],
-},
-{
-    id: 3,
-    titulo: "Algoritmos y Estructuras de Datos",
-    autor: "Thomas H. Cormen, Charles E. Leiserson",
-    editorial: "MIT Press",
-    año: 2022,
-    edicion: "4ta Edición",
-    categoria: "Algoritmos",
-    disponible: false,
-    copias: 0,
-    ubicacion: "Estante C-08",
-    isbn: "978-0262046305",
-    descripcion:
-        "Este libro cubre una amplia gama de algoritmos en profundidad, pero hace que su diseño y análisis sean accesibles para todos los niveles de lectores. Cada capítulo es relativamente autónomo y puede utilizarse como unidad de estudio.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.8,
-    prestamos: 56,
-    paginas: 1312,
-    idioma: "Inglés",
-    temas: ["Algoritmos", "Estructuras de Datos", "Complejidad", "Grafos"],
-},
-{
-    id: 4,
-    titulo: "Inteligencia Artificial: Un Enfoque Moderno",
-    autor: "Stuart Russell, Peter Norvig",
-    editorial: "Pearson",
-    año: 2020,
-    edicion: "4ta Edición",
-    categoria: "Inteligencia Artificial",
-    disponible: true,
-    copias: 1,
-    ubicacion: "Estante D-03",
-    isbn: "978-0134610993",
-    descripcion:
-        "El libro de texto líder en inteligencia artificial, utilizado en más de 1500 universidades en más de 135 países. El texto proporciona una introducción moderna a la IA, cubriendo tanto los fundamentos como los temas avanzados.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.7,
-    prestamos: 45,
-    paginas: 1136,
-    idioma: "Español",
-    temas: ["Machine Learning", "Redes Neuronales", "Visión por Computadora", "Procesamiento de Lenguaje Natural"],
-},
-{
-    id: 5,
-    titulo: "Redes de Computadoras",
-    autor: "Andrew S. Tanenbaum, David J. Wetherall",
-    editorial: "Pearson",
-    año: 2021,
-    edicion: "6ta Edición",
-    categoria: "Redes",
-    disponible: true,
-    copias: 4,
-    ubicacion: "Estante A-07",
-    isbn: "978-0132126953",
-    descripcion:
-        "Este libro presenta un enfoque estructurado y completo de las redes de computadoras, desde los conceptos básicos hasta las aplicaciones avanzadas. Cubre los principios, protocolos y arquitecturas de las redes modernas.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.3,
-    prestamos: 32,
-    paginas: 960,
-    idioma: "Español",
-    temas: ["TCP/IP", "Protocolos", "Seguridad en Redes", "Arquitectura de Redes"],
-},
-{
-    id: 6,
-    titulo: "Programación en Python",
-    autor: "Mark Lutz",
-    editorial: "O'Reilly Media",
-    año: 2021,
-    edicion: "5ta Edición",
-    categoria: "Programación",
-    disponible: true,
-    copias: 2,
-    ubicacion: "Estante B-12",
-    isbn: "978-1449355739",
-    descripcion:
-        "Una guía completa para el lenguaje de programación Python. Cubre desde los conceptos básicos hasta técnicas avanzadas, incluyendo programación orientada a objetos, manejo de excepciones y desarrollo de aplicaciones.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.6,
-    prestamos: 48,
-    paginas: 1648,
-    idioma: "Español",
-    temas: ["Python", "Programación Orientada a Objetos", "Desarrollo Web", "Análisis de Datos"],
-},
-{
-    id: 7,
-    titulo: "Sistemas Operativos Modernos",
-    autor: "Andrew S. Tanenbaum",
-    editorial: "Pearson",
-    año: 2018,
-    edicion: "4ta Edición",
-    categoria: "Sistemas Operativos",
-    disponible: true,
-    copias: 5,
-    ubicacion: "Estante D-10",
-    isbn: "978-0133591620",
-    descripcion:
-        "Un libro esencial para entender los conceptos y mecanismos de los sistemas operativos modernos, cubriendo desde la administración de procesos hasta la seguridad.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.4,
-    prestamos: 27,
-    paginas: 1136,
-    idioma: "Español",
-    temas: ["Procesos", "Memoria", "Seguridad", "Sistemas Distribuidos"],
-},
-{
-    id: 8,
-    titulo: "Ciencia de Datos con Python",
-    autor: "Joel Grus",
-    editorial: "O'Reilly Media",
-    año: 2020,
-    edicion: "2da Edición",
-    categoria: "Programación",
-    disponible: false,
-    copias: 0,
-    ubicacion: "Estante B-15",
-    isbn: "978-1492041139",
-    descripcion:
-        "Una introducción práctica a la ciencia de datos usando Python, cubriendo desde estadística básica hasta machine learning.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.1,
-    prestamos: 19,
-    paginas: 400,
-    idioma: "Español",
-    temas: ["Python", "Ciencia de Datos", "Machine Learning", "Estadística"],
-},
-{
-    id: 9,
-    titulo: "Compiladores: Principios, Técnicas y Herramientas",
-    autor: "Alfred V. Aho, Monica S. Lam, Ravi Sethi, Jeffrey D. Ullman",
-    editorial: "Pearson",
-    año: 2007,
-    edicion: "2da Edición",
-    categoria: "Programación",
-    disponible: true,
-    copias: 2,
-    ubicacion: "Estante C-02",
-    isbn: "978-0321486813",
-    descripcion:
-        "Conocido como el 'Libro del Dragón', es la referencia clásica para el diseño e implementación de compiladores.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.7,
-    prestamos: 34,
-    paginas: 1000,
-    idioma: "Español",
-    temas: ["Compiladores", "Lenguajes de Programación", "Análisis Léxico", "Sintaxis"],
-},
-{
-    id: 10,
-    titulo: "Linux: The Complete Reference",
-    autor: "Richard Petersen",
-    editorial: "McGraw-Hill",
-    año: 2019,
-    edicion: "8va Edición",
-    categoria: "Sistemas Operativos",
-    disponible: true,
-    copias: 3,
-    ubicacion: "Estante D-12",
-    isbn: "978-1260440218",
-    descripcion:
-        "Guía completa sobre el sistema operativo Linux, desde la instalación hasta la administración avanzada.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.3,
-    prestamos: 22,
-    paginas: 912,
-    idioma: "Inglés",
-    temas: ["Linux", "Administración de Sistemas", "Shell", "Redes"],
-},
-{
-    id: 11,
-    titulo: "Redes Neuronales y Aprendizaje Profundo",
-    autor: "Michael Nielsen",
-    editorial: "Independiente",
-    año: 2017,
-    edicion: "1ra Edición",
-    categoria: "Inteligencia Artificial",
-    disponible: false,
-    copias: 0,
-    ubicacion: "Estante D-15",
-    isbn: "978-1530826605",
-    descripcion:
-        "Una introducción clara y visual al aprendizaje profundo y las redes neuronales artificiales.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.5,
-    prestamos: 29,
-    paginas: 320,
-    idioma: "Español",
-    temas: ["Deep Learning", "Redes Neuronales", "IA", "Python"],
-},
-{
-    id: 12,
-    titulo: "Estructura y Diseño de Computadoras",
-    autor: "David A. Patterson, John L. Hennessy",
-    editorial: "Morgan Kaufmann",
-    año: 2021,
-    edicion: "6ta Edición",
-    categoria: "Algoritmos",
-    disponible: true,
-    copias: 1,
-    ubicacion: "Estante E-01",
-    isbn: "978-0128201091",
-    descripcion:
-        "Referencia fundamental sobre arquitectura de computadoras, cubriendo desde los principios básicos hasta los sistemas modernos.",
-    portada: "/placeholder.svg?height=280&width=200",
-    calificacion: 4.9,
-    prestamos: 17,
-    paginas: 800,
-    idioma: "Español",
-    temas: ["Arquitectura", "Hardware", "Procesadores", "Memoria"],
-},
-];
-
 export default function AdminCatalogPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBook, setSelectedBook] = useState(null);
@@ -315,7 +49,37 @@ export default function AdminCatalogPage() {
   const [username, setUsername] = useState("Bibliotecario");
 
   // Simula libros (puedes usar useState si quieres mutar la lista)
-  const [libros, setLibros] = useState(librosEjemplo);
+  const [libros, setLibros] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  // Estado para el formulario de añadir libro (agrega todos los campos que tiene tu modelo)
+  const [addBookForm, setAddBookForm] = useState({
+    title: "",
+    author: "",
+    editorial: "",
+    description: "",
+    published_date: "",
+    image_url: "",
+    available_copies: 1,
+    categories: "",
+    calificacion: 0, // Si tu modelo tiene calificación
+  });
+  const [addBookError, setAddBookError] = useState("");
+  const [addBookSuccess, setAddBookSuccess] = useState("");
+
+  // Estado para el formulario de edición
+  const [editBookForm, setEditBookForm] = useState({
+    title: "",
+    author: "",
+    editorial: "",
+    description: "",
+    published_date: "",
+    image_url: "",
+    available_copies: 1,
+    categories: "",
+    calificacion: 0,
+  });
+  const [editBookError, setEditBookError] = useState("");
+  const [editBookSuccess, setEditBookSuccess] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.localStorage) {
@@ -334,14 +98,50 @@ export default function AdminCatalogPage() {
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
+  // Obtener libros desde el backend y extraer categorías únicas
+  useEffect(() => {
+    const token = localStorage.getItem('sgp-uci-token');
+    fetch('http://localhost:8000/library/api/books/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setLibros(data);
+
+        // Extraer categorías únicas de todos los libros
+        const allCategories = data
+          .flatMap(libro =>
+            typeof libro.categories === "string"
+              ? libro.categories.split(",").map(c => c.trim())
+              : Array.isArray(libro.categories)
+                ? libro.categories.map(c => c.trim())
+                : []
+          )
+          .filter(Boolean);
+
+        setCategorias([...new Set(allCategories)]);
+      })
+      .catch(() => {
+        setLibros([]);
+        setCategorias([]);
+      });
+  }, []);
+
   // Filtros
   const filteredBooks = libros.filter((libro) => {
     const matchesSearch =
-      libro.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      libro.autor.toLowerCase().includes(searchTerm.toLowerCase());
+      (libro.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (libro.author?.toLowerCase() || "").includes(searchTerm.toLowerCase());
     const matchesCategory =
-      selectedCategories.length === 0 || selectedCategories.includes(libro.categoria);
-    const matchesAvailable = !onlyAvailable || libro.disponible;
+      selectedCategories.length === 0 ||
+      selectedCategories.some(cat =>
+        (libro.categories || "").toLowerCase().includes(cat.toLowerCase())
+      );
+    const matchesAvailable = !onlyAvailable || libro.available_copies > 0;
     return matchesSearch && matchesCategory && matchesAvailable;
   });
 
@@ -364,23 +164,138 @@ export default function AdminCatalogPage() {
     window.location.href = "/";
   };
 
+  // Manejar cambios en el formulario de añadir libro
+  const handleAddBookChange = (e) => {
+    const { name, value } = e.target;
+    setAddBookForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   // Añadir libro
-  const handleAddBook = (e) => {
+  const handleAddBook = async (e) => {
     e.preventDefault();
-    // Aquí puedes obtener los datos del formulario y agregarlos a la lista de libros
-    setShowAddModal(false);
+    setAddBookError("");
+    setAddBookSuccess("");
+    const token = localStorage.getItem('sgp-uci-token');
+    try {
+      const res = await fetch('http://localhost:8000/library/api/books/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...addBookForm,
+          available_copies: Number(addBookForm.available_copies),
+          calificacion: Number(addBookForm.calificacion),
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        setAddBookError(
+          errorData.detail ||
+          Object.values(errorData).flat().join(" ") ||
+          "Error al añadir el libro"
+        );
+        return;
+      }
+      const newBook = await res.json();
+      setAddBookSuccess("Libro añadido satisfactoriamente");
+      setLibros((prev) => [...prev, newBook]);
+      setShowAddModal(false);
+      setAddBookForm({
+        title: "",
+        author: "",
+        editorial: "",
+        description: "",
+        published_date: "",
+        image_url: "",
+        available_copies: 1,
+        categories: "",
+        calificacion: 0,
+      });
+    } catch (err) {
+      setAddBookError("Error de red al añadir el libro");
+    }
   };
 
   // Editar libro
   const handleEditBook = (book) => {
+    setSelectedBook(null); // Cierra el modal de detalles antes de abrir el de edición
     setBookToEdit(book);
     setShowEditModal(true);
   };
 
-  const handleSaveEditBook = (e) => {
+  // Cuando se selecciona un libro para editar, llena el formulario
+  useEffect(() => {
+    if (bookToEdit) {
+      setEditBookForm({
+        title: bookToEdit.title || "",
+        author: bookToEdit.author || "",
+        editorial: bookToEdit.editorial || "",
+        description: bookToEdit.description || "",
+        published_date: bookToEdit.published_date || "",
+        image_url: bookToEdit.image_url || "",
+        available_copies: bookToEdit.available_copies ?? 1,
+        categories: Array.isArray(bookToEdit.categories)
+          ? bookToEdit.categories.join(", ")
+          : (bookToEdit.categories || ""),
+        calificacion: bookToEdit.calificacion ?? 0,
+      });
+      setEditBookError("");
+      setEditBookSuccess("");
+    }
+  }, [bookToEdit]);
+
+  const handleEditBookChange = (e) => {
+    const { name, value } = e.target;
+    setEditBookForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Guardar cambios del libro editado
+  const handleSaveEditBook = async (e) => {
     e.preventDefault();
-    // Aquí puedes actualizar el libro en la lista
-    setShowEditModal(false);
+    setEditBookError("");
+    setEditBookSuccess("");
+    if (!bookToEdit) return;
+    const token = localStorage.getItem('sgp-uci-token');
+    try {
+      const res = await fetch(`http://localhost:8000/library/api/books/${bookToEdit.id}/`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...editBookForm,
+          available_copies: Number(editBookForm.available_copies),
+          calificacion: Number(editBookForm.calificacion),
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        setEditBookError(
+          errorData.detail ||
+          Object.values(errorData).flat().join(" ") ||
+          "Error al editar el libro"
+        );
+        return;
+      }
+      const updatedBook = await res.json();
+      setEditBookSuccess("Libro editado satisfactoriamente");
+      setLibros((prev) =>
+        prev.map((libro) => (libro.id === updatedBook.id ? updatedBook : libro))
+      );
+      setShowEditModal(false);
+      setBookToEdit(null);
+    } catch (err) {
+      setEditBookError("Error de red al editar el libro");
+    }
   };
 
   // Eliminar libro
@@ -389,10 +304,32 @@ export default function AdminCatalogPage() {
     setShowDeleteModal(true);
   };
 
-  const confirmDeleteBook = () => {
-    // Aquí puedes eliminar el libro de la lista
-    setShowDeleteModal(false);
-    setSelectedBook(null);
+  const confirmDeleteBook = async () => {
+    if (!bookToDelete) return;
+    const token = localStorage.getItem('sgp-uci-token');
+    try {
+      const res = await fetch(`http://localhost:8000/library/api/books/${bookToDelete.id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        setLibros((prev) => prev.filter((libro) => libro.id !== bookToDelete.id));
+        setShowDeleteModal(false);
+        setSelectedBook(null);
+        setBookToDelete(null);
+      } else {
+        // Puedes mostrar un mensaje de error si lo deseas
+        setShowDeleteModal(false);
+        setBookToDelete(null);
+      }
+    } catch (err) {
+      // Puedes mostrar un mensaje de error si lo deseas
+      setShowDeleteModal(false);
+      setBookToDelete(null);
+    }
   };
 
   // Filtros
@@ -472,27 +409,17 @@ export default function AdminCatalogPage() {
           <div className="d-flex flex-column h-100">
             <div className="text-center mb-4">
               <img
-                src={selectedBook.portada}
-                alt={selectedBook.titulo}
+                src={selectedBook.image_url}
+                alt={selectedBook.title}
                 className="img-fluid rounded mb-3"
                 style={{ maxHeight: '300px' }}
               />
-              <h2>{selectedBook.titulo}</h2>
-              <p className="text-muted">{selectedBook.autor}</p>
-              <div className="d-flex justify-content-center gap-3 mb-3">
-                <div className="d-flex align-items-center">
-                  <Star size={16} className="text-warning me-1" />
-                  <span>{selectedBook.calificacion}</span>
-                </div>
-                <div className="d-flex align-items-center">
-                  <Users size={16} className="text-muted me-1" />
-                  <span>{selectedBook.prestamos} préstamos</span>
-                </div>
-              </div>
+              <h2>{selectedBook.title}</h2>
+              <p className="text-muted">{selectedBook.author}</p>
             </div>
             <div className="mb-4">
               <h5>Descripción</h5>
-              <p>{selectedBook.descripcion}</p>
+              <p>{selectedBook.description}</p>
             </div>
             <Row className="mb-4">
               <Col md={6}>
@@ -501,8 +428,7 @@ export default function AdminCatalogPage() {
                   <dt className="col-sm-4">Editorial</dt>
                   <dd className="col-sm-8">{selectedBook.editorial}</dd>
                   <dt className="col-sm-4">Año</dt>
-                  <dd className="col-sm-8">{selectedBook.año}</dd>
-                  {/* Más detalles... */}
+                  <dd className="col-sm-8">{selectedBook.published_date}</dd>
                 </dl>
               </Col>
             </Row>
@@ -650,27 +576,25 @@ export default function AdminCatalogPage() {
                           <Card.Body>
                             <div className="d-flex">
                               <img
-                                src={libro.portada}
-                                alt={libro.titulo}
+                                src={libro.image_url}
+                                alt={libro.title}
                                 className="me-3 rounded"
                                 style={{ width: '48px', height: '72px', objectFit: 'cover' }}
                               />
                               <div className="d-flex flex-column">
-                                <Card.Title className="h6">{libro.titulo}</Card.Title>
+                                <Card.Title className="h6">{libro.title}</Card.Title>
                                 <Card.Subtitle className="text-muted small mb-2">
-                                  {libro.autor}
+                                  {libro.author}
                                 </Card.Subtitle>
                                 <div className="d-flex align-items-center mb-2">
-                                  <Star size={14} className="text-warning me-1" />
-                                  <small>{libro.calificacion}</small>
                                   <CalendarIcon size={14} className="ms-2 me-1 text-muted" />
-                                  <small className="text-muted">{libro.año}</small>
+                                  <small className="text-muted">{libro.published_date}</small>
                                 </div>
                                 <Badge
-                                  bg={libro.disponible ? 'success' : 'secondary'}
+                                  bg={libro.available_copies > 0 ? 'success' : 'secondary'}
                                   className="mt-auto align-self-start"
                                 >
-                                  {libro.disponible ? 'Disponible' : 'No disponible'}
+                                  {libro.available_copies > 0 ? 'Disponible' : 'No disponible'}
                                 </Badge>
                               </div>
                             </div>
@@ -715,21 +639,95 @@ export default function AdminCatalogPage() {
           <Form onSubmit={handleAddBook}>
             <Form.Group className="mb-3">
               <Form.Label>Título</Form.Label>
-              <Form.Control required />
+              <Form.Control
+                name="title"
+                value={addBookForm.title}
+                onChange={handleAddBookChange}
+                required
+              />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Autor</Form.Label>
-              <Form.Control required />
+              <Form.Control
+                name="author"
+                value={addBookForm.author}
+                onChange={handleAddBookChange}
+                required
+              />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Categoría</Form.Label>
-              <Form.Select required>
-                {categorias.map((cat) => (
-                  <option key={cat}>{cat}</option>
-                ))}
-              </Form.Select>
+              <Form.Label>Editorial</Form.Label>
+              <Form.Control
+                name="editorial"
+                value={addBookForm.editorial}
+                onChange={handleAddBookChange}
+              />
             </Form.Group>
-            {/* Agrega más campos según lo necesario */}
+            <Form.Group className="mb-3">
+              <Form.Label>Descripción</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                name="description"
+                value={addBookForm.description}
+                onChange={handleAddBookChange}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Fecha de publicación</Form.Label>
+              <Form.Control
+                type="date"
+                name="published_date"
+                value={addBookForm.published_date}
+                onChange={handleAddBookChange}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>URL de la imagen</Form.Label>
+              <Form.Control
+                name="image_url"
+                value={addBookForm.image_url}
+                onChange={handleAddBookChange}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Ejemplares disponibles</Form.Label>
+              <Form.Control
+                type="number"
+                min={0}
+                name="available_copies"
+                value={addBookForm.available_copies}
+                onChange={handleAddBookChange}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Categorías (separadas por coma)</Form.Label>
+              <Form.Control
+                name="categories"
+                value={addBookForm.categories}
+                onChange={handleAddBookChange}
+                placeholder="Ej: Ciencia Ficción, Fantasía"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Calificación</Form.Label>
+              <Form.Control
+                type="number"
+                min={0}
+                max={5}
+                step={0.1}
+                name="calificacion"
+                value={addBookForm.calificacion}
+                onChange={handleAddBookChange}
+              />
+            </Form.Group>
+            {addBookError && (
+              <div className="alert alert-danger py-2">{addBookError}</div>
+            )}
+            {addBookSuccess && (
+              <div className="alert alert-success py-2">{addBookSuccess}</div>
+            )}
             <Button type="submit" variant="primary">
               Guardar
             </Button>
@@ -746,21 +744,95 @@ export default function AdminCatalogPage() {
           <Form onSubmit={handleSaveEditBook}>
             <Form.Group className="mb-3">
               <Form.Label>Título</Form.Label>
-              <Form.Control defaultValue={bookToEdit?.titulo} required />
+              <Form.Control
+                name="title"
+                value={editBookForm.title}
+                onChange={handleEditBookChange}
+                required
+              />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Autor</Form.Label>
-              <Form.Control defaultValue={bookToEdit?.autor} required />
+              <Form.Control
+                name="author"
+                value={editBookForm.author}
+                onChange={handleEditBookChange}
+                required
+              />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Categoría</Form.Label>
-              <Form.Select defaultValue={bookToEdit?.categoria} required>
-                {categorias.map((cat) => (
-                  <option key={cat}>{cat}</option>
-                ))}
-              </Form.Select>
+              <Form.Label>Editorial</Form.Label>
+              <Form.Control
+                name="editorial"
+                value={editBookForm.editorial}
+                onChange={handleEditBookChange}
+              />
             </Form.Group>
-            {/* Agrega más campos según lo necesario */}
+            <Form.Group className="mb-3">
+              <Form.Label>Descripción</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                name="description"
+                value={editBookForm.description}
+                onChange={handleEditBookChange}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Fecha de publicación</Form.Label>
+              <Form.Control
+                type="date"
+                name="published_date"
+                value={editBookForm.published_date}
+                onChange={handleEditBookChange}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>URL de la imagen</Form.Label>
+              <Form.Control
+                name="image_url"
+                value={editBookForm.image_url}
+                onChange={handleEditBookChange}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Ejemplares disponibles</Form.Label>
+              <Form.Control
+                type="number"
+                min={0}
+                name="available_copies"
+                value={editBookForm.available_copies}
+                onChange={handleEditBookChange}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Categorías (separadas por coma)</Form.Label>
+              <Form.Control
+                name="categories"
+                value={editBookForm.categories}
+                onChange={handleEditBookChange}
+                placeholder="Ej: Ciencia Ficción, Fantasía"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Calificación</Form.Label>
+              <Form.Control
+                type="number"
+                min={0}
+                max={5}
+                step={0.1}
+                name="calificacion"
+                value={editBookForm.calificacion}
+                onChange={handleEditBookChange}
+              />
+            </Form.Group>
+            {editBookError && (
+              <div className="alert alert-danger py-2">{editBookError}</div>
+            )}
+            {editBookSuccess && (
+              <div className="alert alert-success py-2">{editBookSuccess}</div>
+            )}
             <Button type="submit" variant="primary">
               Guardar Cambios
             </Button>

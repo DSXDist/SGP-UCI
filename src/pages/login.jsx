@@ -38,6 +38,7 @@ const LoginPage = () => {
       if (response.ok && data.token) {
         localStorage.setItem('sgp-uci-username', username);
         localStorage.setItem('sgp-uci-token', data.token);
+        localStorage.setItem('sgp-uci-id', data.user_id);
         localStorage.setItem('sgp-uci-is_bibliotecario', data.is_bibliotecario); // Guarda is_bibliotecario
 
         // Verifica is_bibliotecario y redirige
