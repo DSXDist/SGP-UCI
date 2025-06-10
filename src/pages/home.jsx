@@ -1,23 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Nav, Button, Form, Badge, Container, Row, Col, Tab, Tabs } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BookOpen, BookPlus, Calendar, Search, Bell, BookMarked, History, User, LogOut, MessageCircle } from 'lucide-react';
+import { BookOpen, Search, Bell, BellDot, BookMarked, User, LogOut, MessageCircle } from 'lucide-react';
 
 export default function Home() {
   let username = 'Estudiante';
+  let userId = null;
   if (typeof window !== "undefined" && window.localStorage) {
     try {
       username = localStorage.getItem('sgp-uci-username') || 'Estudiante';
+      userId = localStorage.getItem('sgp-uci-id');
     } catch (e) {
       username = 'Estudiante';
     }
   }
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [prestamos, setPrestamos] = useState([]);
+  const [loadingPrestamos, setLoadingPrestamos] = useState(true);
+
+  // Estado para notificaciones
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [loadingNotificaciones, setLoadingNotificaciones] = useState(true);
+
+  useEffect(() => {
+    const fetchPrestamos = async () => {
+      if (!userId) return;
+      setLoadingPrestamos(true);
+      const token = localStorage.getItem('sgp-uci-token');
+      try {
+        const res = await fetch(`http://localhost:8000/library/api/users/${userId}/loans/`, {
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        setPrestamos(Array.isArray(data) ? data : []);
+      } catch {
+        setPrestamos([]);
+      }
+      setLoadingPrestamos(false);
+    };
+    fetchPrestamos();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchNotificaciones = async () => {
+      if (!userId) return;
+      setLoadingNotificaciones(true);
+      const token = localStorage.getItem('sgp-uci-token');
+      try {
+        const res = await fetch(`http://localhost:8000/library/api/users/${userId}/notifications`, {
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        // Solo notificaciones no leídas
+        setNotificaciones(Array.isArray(data) ? data.filter(n => n.is_read === false) : []);
+      } catch {
+        setNotificaciones([]);
+      }
+      setLoadingNotificaciones(false);
+    };
+    fetchNotificaciones();
+  }, [userId]);
 
   const handleLogout = () => {
     localStorage.removeItem('sgp-uci-username');
+    localStorage.removeItem('sgp-uci-id');
+    localStorage.removeItem('sgp-uci-token');
     navigate('/');
   };
 
@@ -40,7 +95,6 @@ export default function Home() {
             </div>
             
             <div className="ms-auto d-flex align-items-center gap-3">
-              {/* Cambia el Form para manejar la búsqueda */}
               <Form className="d-none d-md-flex" onSubmit={handleSearchSubmit}>
                 <div className="input-group">
                   <Button
@@ -72,8 +126,16 @@ export default function Home() {
                 className="position-relative p-0"
                 onClick={() => navigate('/notifications')}
               >
-                <Bell size={20} />
-                <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">3</Badge>
+                {notificaciones.length > 0 ? (
+                  <BellDot size={20} className="text-danger" />
+                ) : (
+                  <Bell size={20} />
+                )}
+                {notificaciones.length > 0 && (
+                  <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">
+                    {notificaciones.length}
+                  </Badge>
+                )}
               </Button>
 
               <div className="d-flex align-items-center gap-2">
@@ -128,54 +190,6 @@ export default function Home() {
               <p className="text-muted">Sistema de Gestión de Préstamos de la Biblioteca Universitaria</p>
             </div>
 
-            {/* Stats Cards */}
-            <Row className="g-4 mb-4">
-              <Col md={6} lg={4}>
-                <Card>
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <Card.Title className="h6 mb-0">Préstamos Activos</Card.Title>
-                        <div className="h3 fw-bold mt-2">3</div>
-                        <small className="text-muted">2 vencen esta semana</small>
-                      </div>
-                      <BookOpen className="text-primary" size={32} />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              
-              <Col md={6} lg={4}>
-                <Card>
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <Card.Title className="h6 mb-0">Reservas</Card.Title>
-                        <div className="h3 fw-bold mt-2">1</div>
-                        <small className="text-muted">Disponible para recoger</small>
-                      </div>
-                      <BookPlus className="text-success" size={32} />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col md={6} lg={4}>
-                <Card>
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <Card.Title className="h6 mb-0">Historial</Card.Title>
-                        <div className="h3 fw-bold mt-2">12</div>
-                        <small className="text-muted">Préstamos completados</small>
-                      </div>
-                      <Calendar className="text-purple" size={32} />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-
             {/* Tabs Section */}
             <Tabs defaultActiveKey="prestamos" className="mb-3">
               <Tab eventKey="prestamos" title="Préstamos Activos">
@@ -186,31 +200,52 @@ export default function Home() {
                       Gestiona tus préstamos actuales y fechas de devolución
                     </Card.Text>
 
-                    {[1, 2, 3].map((item, idx) => (
-                      <Card key={`prestamo-${idx}`} className="mb-3">
-                        <Card.Body>
-                          <Row className="align-items-center">
-                            <Col md={8}>
-                              <div className="d-flex align-items-center gap-3">
-                                <div className="bg-primary bg-opacity-10 p-2 rounded">
-                                  <BookOpen className="text-primary" size={32} />
-                                </div>
-                                <div>
-                                  <h5 className="mb-1">Título del Libro {item}</h5>
-                                  <small className="text-muted">Autor del Libro {item}</small>
-                                </div>
-                              </div>
-                            </Col>
-                            <Col md={4} className="text-end">
-                              <div className="mb-2">Vence: 15/05/2025</div>
-                              <Badge bg={item === 1 ? 'danger' : 'secondary'}>
-                                {item === 1 ? 'Vence pronto' : '10 días restantes'}
-                              </Badge>
-                            </Col>
-                          </Row>
-                        </Card.Body>
-                      </Card>
-                    ))}
+                    {loadingPrestamos ? (
+                      <div className="text-center my-4">Cargando...</div>
+                    ) : prestamos.length === 0 ? (
+                      <div className="text-center my-4 text-muted">No tienes préstamos activos.</div>
+                    ) : (
+                      prestamos.map((prestamo) => {
+                        // Calcular días restantes
+                        let diasRestantes = "-";
+                        if (prestamo.return_date) {
+                          const hoy = new Date();
+                          const fechaVence = new Date(prestamo.return_date);
+                          hoy.setHours(0,0,0,0);
+                          fechaVence.setHours(0,0,0,0);
+                          const diffMs = fechaVence - hoy;
+                          diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                        }
+                        return (
+                          <Card key={prestamo.id} className="mb-3">
+                            <Card.Body>
+                              <Row className="align-items-center">
+                                <Col md={8}>
+                                  <div className="d-flex align-items-center gap-3">
+                                    <div className="bg-primary bg-opacity-10 p-2 rounded">
+                                      <BookOpen className="text-primary" size={32} />
+                                    </div>
+                                    <div>
+                                      <h5 className="mb-1">{prestamo.book_title}</h5>
+                                    </div>
+                                  </div>
+                                </Col>
+                                <Col md={4} className="text-end">
+                                  <div className="mb-2">
+                                    Vence: {typeof diasRestantes === "number" && diasRestantes >= 0
+                                      ? `en ${diasRestantes} día${diasRestantes === 1 ? '' : 's'}`
+                                      : "fecha vencida"}
+                                  </div>
+                                  <Badge bg={prestamo.status === 'ONDATE' ? 'secondary' : 'danger'}>
+                                    {prestamo.status === 'ONDATE' ? 'Activo' : 'Vencido'}
+                                  </Badge>
+                                </Col>
+                              </Row>
+                            </Card.Body>
+                          </Card>
+                        );
+                      })
+                    )}
                   </Card.Body>
                 </Card>
               </Tab>
@@ -223,24 +258,54 @@ export default function Home() {
                       Mantente al día con tus préstamos y eventos de la biblioteca
                     </Card.Text>
 
-                    {[1, 2, 3].map((item, idx) => (
-                      <Card key={`notificacion-${idx}`} className="mb-3">
-                        <Card.Body>
-                          <div className="d-flex align-items-start gap-3">
-                            <Badge pill bg={item === 1 ? 'danger' : 'secondary'} className="mt-1">
-                              {item === 1 ? 'Urgente' : 'Información'}
-                            </Badge>
-                            <div>
-                              <h5 className="mb-1">Título de Notificación {item}</h5>
-                              <p className="text-muted mb-1">
-                                Descripción detallada de la notificación {item}
-                              </p>
-                              <small className="text-muted">Fecha: 15/05/2025</small>
-                            </div>
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    ))}
+                    {loadingNotificaciones ? (
+                      <div className="text-center my-4">Cargando...</div>
+                    ) : notificaciones.length === 0 ? (
+                      <div className="text-center my-4 text-muted">No tienes notificaciones nuevas.</div>
+                    ) : (
+                      notificaciones.map((notif, idx) => {
+                        // Calcular días desde la creación
+                        let diasDesde = "";
+                        if (notif.created_at) {
+                          const hoy = new Date();
+                          const fechaNotif = new Date(notif.created_at);
+                          hoy.setHours(0,0,0,0);
+                          fechaNotif.setHours(0,0,0,0);
+                          const diffMs = hoy - fechaNotif;
+                          const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                          if (dias === 0) {
+                            diasDesde = "hoy";
+                          } else if (dias === 1) {
+                            diasDesde = "hace 1 día";
+                          } else if (dias > 1) {
+                            diasDesde = `hace ${dias} días`;
+                          }
+                        }
+
+                        return (
+                          <Card key={`notificacion-${notif.id}`} className="mb-3">
+                            <Card.Body>
+                              <div className="d-flex align-items-start gap-3">
+                                <Badge pill bg="danger" className="mt-1">
+                                  Nueva
+                                </Badge>
+                                <div>
+                                  <h5 className="mb-1">{notif.title}</h5>
+                                  <p className="text-muted mb-1">
+                                    {notif.description}
+                                  </p>
+                                  <small className="text-muted">
+                                    {notif.created_at
+                                      ? `Fecha: ${new Date(notif.created_at).toLocaleDateString()}${diasDesde ? ` (${diasDesde})` : ""}`
+                                      : ""}
+                                  </small>
+                                </div>
+                              </div>
+                            </Card.Body>
+                          </Card>
+                        );
+                      })
+                    )}
                   </Card.Body>
                 </Card>
               </Tab>

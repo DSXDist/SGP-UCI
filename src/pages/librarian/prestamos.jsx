@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BookOpen,
   Users,
@@ -36,7 +36,69 @@ export default function PrestamosPage() {
   const [detailsData, setDetailsData] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMsg, setAlertMsg] = useState("");
-  const [showNewPrestamo, setShowNewPrestamo] = useState(false);
+
+  // Estado para préstamos
+  const [prestamos, setPrestamos] = useState([]);
+  const [loadingPrestamos, setLoadingPrestamos] = useState(true);
+
+  // Estado para cache de usuarios
+  const [usuariosCache, setUsuariosCache] = useState({});
+
+  // Obtener préstamos desde el backend y actualizar status si es necesario
+  useEffect(() => {
+    const token = localStorage.getItem('sgp-uci-token');
+    setLoadingPrestamos(true);
+    fetch('http://localhost:8000/library/api/loans/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => res.json())
+      .then(async data => {
+        const prestamosArray = Array.isArray(data) ? data : [];
+        // Verificar fechas y actualizar status si es necesario
+        const now = new Date();
+        for (const p of prestamosArray) {
+          if (
+            p.status === "ONDATE" &&
+            p.loan_date &&
+            p.return_date &&
+            new Date(now) > new Date(p.return_date)
+          ) {
+            try {
+              await fetch(`http://localhost:8000/library/api/loans/${p.id}/`, {
+                method: 'PUT',
+                headers: {
+                  'Authorization': `Token ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  ...p,
+                  status: "OFFDATE"
+                })
+              });
+              // Opcional: actualizar localmente el status para reflejar el cambio inmediato
+              p.status = "OFFDATE";
+            } catch (e) {
+              // Manejo de error opcional
+            }
+          }
+        }
+        setPrestamos(prestamosArray);
+        setLoadingPrestamos(false);
+      })
+      .catch(() => {
+        setPrestamos([]);
+        setLoadingPrestamos(false);
+      });
+  }, []);
+
+  // Filtrar préstamos por estado
+  const prestamosActivos = prestamos.filter(p => p.status === "ONDATE");
+  const prestamosSolicitudes = prestamos.filter(p => p.status === "AWAITING");
+  const prestamosVencidos = prestamos.filter(p => p.status === "OFFDATE");
 
   // Funciones para acciones
   const handleShowDetails = (prestamo) => {
@@ -50,14 +112,49 @@ export default function PrestamosPage() {
     setTimeout(() => setShowAlert(false), 2000);
   };
 
-  const handleNewPrestamo = (e) => {
-    e && e.preventDefault();
-    setShowNewPrestamo(false);
-    handleAction("Nuevo préstamo creado correctamente");
-  };
-
   const handleNotificarTodos = () => {
     handleAction("Se ha enviado recordatorios a todos los usuarios");
+  };
+
+  useEffect(() => {
+    function handleAprobado(e) {
+      setPrestamos(prev =>
+        prev.map(p =>
+          p.id === e.detail.id
+            ? { ...p, status: "ONDATE", return_date: e.detail.return_date }
+            : p
+        )
+      );
+    }
+    function handleRechazado(e) {
+      setPrestamos(prev => prev.filter(p => p.id !== e.detail.id));
+    }
+    window.addEventListener("prestamo-aprobado", handleAprobado);
+    window.addEventListener("prestamo-rechazado", handleRechazado);
+    return () => {
+      window.removeEventListener("prestamo-aprobado", handleAprobado);
+      window.removeEventListener("prestamo-rechazado", handleRechazado);
+    };
+  }, []);
+
+  // Función para obtener usuario por ID y guardar en cache
+  const fetchUsuario = async (userId) => {
+    if (!userId) return {};
+    if (usuariosCache[userId]) return usuariosCache[userId];
+    const token = localStorage.getItem('sgp-uci-token');
+    try {
+      const res = await fetch(`http://localhost:8000/library/api/users/${userId}/`, {
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      setUsuariosCache(prev => ({ ...prev, [userId]: data }));
+      return data;
+    } catch {
+      return {};
+    }
   };
 
   return (
@@ -121,36 +218,6 @@ export default function PrestamosPage() {
         </Modal.Body>
       </Modal>
 
-      {/* Modal Nuevo Préstamo */}
-      <Modal show={showNewPrestamo} onHide={() => setShowNewPrestamo(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Nuevo Préstamo</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form onSubmit={handleNewPrestamo}>
-            <Form.Group className="mb-3">
-              <Form.Label>Usuario</Form.Label>
-              <Form.Control required placeholder="Nombre del usuario" />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Libro</Form.Label>
-              <Form.Control required placeholder="Título del libro" />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Fecha Préstamo</Form.Label>
-              <Form.Control type="date" required />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Fecha Devolución</Form.Label>
-              <Form.Control type="date" required />
-            </Form.Group>
-            <Button type="submit" variant="primary">
-              Crear Préstamo
-            </Button>
-          </Form>
-        </Modal.Body>
-      </Modal>
-
       <div className="d-flex flex-grow-1">
         {/* Sidebar igual a homeLibrarian */}
         <div className="d-none d-md-block bg-white border-end" style={{ width: '240px' }}>
@@ -198,8 +265,6 @@ export default function PrestamosPage() {
               <p className="text-muted">Administra los préstamos, solicitudes y devoluciones</p>
             </div>
 
-            {/* Sin estadísticas ni exportar datos */}
-
             <Tab.Container defaultActiveKey="activos">
               <Nav variant="tabs" className="mb-3 flex-wrap">
                 <Nav.Item>
@@ -211,9 +276,9 @@ export default function PrestamosPage() {
                 <Nav.Item>
                   <Nav.Link eventKey="vencidos">Vencidos</Nav.Link>
                 </Nav.Item>
-                <Nav.Item>
+                {/* <Nav.Item>
                   <Nav.Link eventKey="historial">Historial</Nav.Link>
-                </Nav.Item>
+                </Nav.Item> */}
               </Nav>
 
               <Tab.Content>
@@ -225,31 +290,13 @@ export default function PrestamosPage() {
                         <Card.Title>Préstamos Activos</Card.Title>
                         <Card.Text className="text-muted">Gestiona los préstamos actualmente en curso</Card.Text>
                       </div>
-                      <div className="d-flex gap-2">
-                        <Button variant="primary" size="sm" onClick={() => setShowNewPrestamo(true)}>
-                          <Plus className="me-1" />
-                          Nuevo Préstamo
-                        </Button>
-                      </div>
                     </Card.Header>
                     <Card.Body>
-                      <div className="d-flex flex-column flex-md-row gap-2 mb-3">
-                        <Form.Control placeholder="Buscar por usuario o libro..." />
-                        <Form.Select style={{ width: '180px', minWidth: '120px' }}>
-                          <option>Todos</option>
-                          <option>Normal</option>
-                          <option>Próximo a vencer</option>
-                          <option>Vencido</option>
-                        </Form.Select>
-                      </div>
                       <div className="table-responsive">
                         <Table striped bordered hover>
                           <thead>
                             <tr>
                               <th>ID</th>
-                              <th>Usuario</th>
-                              <th>Correo</th>
-                              <th>Año Académico</th>
                               <th>Libro</th>
                               <th>Fecha Préstamo</th>
                               <th>Fecha Devolución</th>
@@ -258,55 +305,30 @@ export default function PrestamosPage() {
                             </tr>
                           </thead>
                           <tbody>
-                            <tr>
-                              <td>P-1002</td>
-                              <td>Carlos Rodríguez</td>
-                              <td>carlos.rodriguez@estudiantes.uci.cu</td>
-                              <td>2do año</td>
-                              <td>Ingeniería de Software</td>
-                              <td>28/04/2025</td>
-                              <td>12/05/2025</td>
-                              <td>
-                                <Badge bg="success">Activo</Badge>
-                              </td>
-                              <td className="text-end">
-                                <Dropdown>
-                                  <Dropdown.Toggle variant="link" size="sm">
-                                    Acciones
-                                  </Dropdown.Toggle>
-                                  <Dropdown.Menu>
-                                    <Dropdown.Item onClick={() => handleShowDetails({
-                                      id: "P-1002",
-                                      usuario: "Carlos Rodríguez",
-                                      correo: "carlos.rodriguez@estudiantes.uci.cu",
-                                      año: "2do año",
-                                      libro: "Ingeniería de Software",
-                                      fechaPrestamo: "28/04/2025",
-                                      fechaDevolucion: "12/05/2025",
-                                      estado: "Activo"
-                                    })}>
-                                      <Eye className="me-2" />
-                                      Ver detalles
-                                    </Dropdown.Item>
-                                    <Dropdown.Item onClick={() => handleAction("El plazo fue extendido correctamente")}>
-                                      <Clock className="me-2" />
-                                      Extender plazo
-                                    </Dropdown.Item>
-                                    <Dropdown.Item onClick={() => handleAction("El préstamo fue marcado como devuelto")}>
-                                      <XCircle className="me-2" />
-                                      Marcar como devuelto
-                                    </Dropdown.Item>
-                                  </Dropdown.Menu>
-                                </Dropdown>
-                              </td>
-                            </tr>
-                            {/* Más filas... */}
+                            {loadingPrestamos ? (
+                              <tr>
+                                <td colSpan={6} className="text-center">Cargando...</td>
+                              </tr>
+                            ) : prestamosActivos.length === 0 ? (
+                              <tr>
+                                <td colSpan={6} className="text-center">No hay préstamos activos.</td>
+                              </tr>
+                            ) : (
+                              prestamosActivos.map(p => (
+                                <PrestamoRow
+                                  key={p.id}
+                                  prestamo={p}
+                                  tipo="activo"
+                                  usuariosCache={usuariosCache}
+                                  fetchUsuario={fetchUsuario}
+                                  setDetailsData={setDetailsData}
+                                  setShowDetails={setShowDetails}
+                                  handleAction={handleAction}
+                                />
+                              ))
+                            )}
                           </tbody>
                         </Table>
-                      </div>
-                      <div className="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-3">
-                        <Button variant="outline-secondary" size="sm">Anterior</Button>
-                        <Button variant="outline-secondary" size="sm">Siguiente</Button>
                       </div>
                     </Card.Body>
                   </Card>
@@ -322,77 +344,42 @@ export default function PrestamosPage() {
                       </div>
                     </Card.Header>
                     <Card.Body>
-                      <div className="d-flex gap-2 mb-3">
-                        <Form.Control placeholder="Buscar por usuario o libro..." />
-                        <Form.Select style={{ width: '180px' }}>
-                          <option>Todos</option>
-                          <option>Alta</option>
-                          <option>Media</option>
-                          <option>Baja</option>
-                        </Form.Select>
-                      </div>
                       <Table striped bordered hover>
                         <thead>
                           <tr>
                             <th>ID</th>
-                            <th>Usuario</th>
-                            <th>Correo</th>
-                            <th>Año Académico</th>
                             <th>Libro</th>
-                            <th>Fecha Solicitud</th>
-                            <th>Prioridad</th>
+                            <th>Fecha Préstamo</th>
+                            <th>Fecha Devolución</th>
+                            <th>Estado</th>
                             <th className="text-end">Acciones</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr>
-                            <td>P-1001</td>
-                            <td>María González</td>
-                            <td>maria.gonzalez@estudiantes.uci.cu</td>
-                            <td>3er año</td>
-                            <td>Fundamentos de Bases de Datos</td>
-                            <td>01/05/2025</td>
-                            <td>
-                              <Badge bg="warning">Media</Badge>
-                            </td>
-                            <td className="text-end">
-                              <Dropdown>
-                                <Dropdown.Toggle variant="link" size="sm">
-                                  Acciones
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu>
-                                  <Dropdown.Item onClick={() => handleShowDetails({
-                                    id: "P-1001",
-                                    usuario: "María González",
-                                    correo: "maria.gonzalez@estudiantes.uci.cu",
-                                    año: "3er año",
-                                    libro: "Fundamentos de Bases de Datos",
-                                    fechaPrestamo: "-",
-                                    fechaDevolucion: "-",
-                                    estado: "Pendiente"
-                                  })}>
-                                    <Eye className="me-2" />
-                                    Ver detalles
-                                  </Dropdown.Item>
-                                  <Dropdown.Item onClick={() => handleAction("La solicitud fue aprobada")}>
-                                    <CheckCircle className="me-2" />
-                                    Aprobar
-                                  </Dropdown.Item>
-                                  <Dropdown.Item onClick={() => handleAction("La solicitud fue rechazada")}>
-                                    <XCircle className="me-2" />
-                                    Rechazar
-                                  </Dropdown.Item>
-                                </Dropdown.Menu>
-                              </Dropdown>
-                            </td>
-                          </tr>
-                          {/* Más filas... */}
+                          {loadingPrestamos ? (
+                            <tr>
+                              <td colSpan={6} className="text-center">Cargando...</td>
+                            </tr>
+                          ) : prestamosSolicitudes.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="text-center">No hay solicitudes pendientes.</td>
+                            </tr>
+                          ) : (
+                            prestamosSolicitudes.map(p => (
+                              <PrestamoRow
+                                key={p.id}
+                                prestamo={p}
+                                tipo="solicitud"
+                                usuariosCache={usuariosCache}
+                                fetchUsuario={fetchUsuario}
+                                setDetailsData={setDetailsData}
+                                setShowDetails={setShowDetails}
+                                handleAction={handleAction}
+                              />
+                            ))
+                          )}
                         </tbody>
                       </Table>
-                      <div className="d-flex justify-content-end gap-2 mt-3">
-                        <Button variant="outline-secondary" size="sm">Anterior</Button>
-                        <Button variant="outline-secondary" size="sm">Siguiente</Button>
-                      </div>
                     </Card.Body>
                   </Card>
                 </Tab.Pane>
@@ -413,151 +400,294 @@ export default function PrestamosPage() {
                       </div>
                     </Card.Header>
                     <Card.Body>
-                      <div className="d-flex gap-2 mb-3">
-                        <Form.Control placeholder="Buscar por usuario o libro..." />
-                        <Form.Select style={{ width: '180px' }}>
-                          <option>Todos</option>
-                          <option>1-7 días</option>
-                          <option>8-15 días</option>
-                          <option>Más de 15 días</option>
-                        </Form.Select>
-                      </div>
                       <Table striped bordered hover>
                         <thead>
                           <tr>
                             <th>ID</th>
-                            <th>Usuario</th>
-                            <th>Correo</th>
-                            <th>Año Académico</th>
-                            <th>Libro</th>
-                            <th>Fecha Vencimiento</th>
-                            <th>Días de Retraso</th>
-                            <th className="text-end">Acciones</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td>P-1003</td>
-                            <td>Ana Martínez</td>
-                            <td>ana.martinez@estudiantes.uci.cu</td>
-                            <td>4to año</td>
-                            <td>Algoritmos y Estructuras de Datos</td>
-                            <td>09/05/2025</td>
-                            <td>2</td>
-                            <td className="text-end">
-                              <Dropdown>
-                                <Dropdown.Toggle variant="link" size="sm">
-                                  Acciones
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu>
-                                  <Dropdown.Item onClick={() => handleShowDetails({
-                                    id: "P-1003",
-                                    usuario: "Ana Martínez",
-                                    correo: "ana.martinez@estudiantes.uci.cu",
-                                    año: "4to año",
-                                    libro: "Algoritmos y Estructuras de Datos",
-                                    fechaPrestamo: "-",
-                                    fechaDevolucion: "-",
-                                    estado: "Vencido"
-                                  })}>
-                                    <Eye className="me-2" />
-                                    Ver detalles
-                                  </Dropdown.Item>
-                                  <Dropdown.Item onClick={() => handleAction("Se envió un recordatorio al usuario")}>
-                                    <Bell className="me-2" />
-                                    Enviar recordatorio
-                                  </Dropdown.Item>
-                                  <Dropdown.Item onClick={() => handleAction("El préstamo fue marcado como devuelto")}>
-                                    <XCircle className="me-2" />
-                                    Marcar como devuelto
-                                  </Dropdown.Item>
-                                </Dropdown.Menu>
-                              </Dropdown>
-                            </td>
-                          </tr>
-                          {/* Más filas... */}
-                        </tbody>
-                      </Table>
-                      <div className="d-flex justify-content-end gap-2 mt-3">
-                        <Button variant="outline-secondary" size="sm">Anterior</Button>
-                        <Button variant="outline-secondary" size="sm">Siguiente</Button>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Tab.Pane>
-
-                {/* Historial */}
-                <Tab.Pane eventKey="historial">
-                  <Card>
-                    <Card.Header className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <Card.Title>Historial de Préstamos</Card.Title>
-                        <Card.Text className="text-muted">Consulta el historial completo de préstamos realizados</Card.Text>
-                      </div>
-                    </Card.Header>
-                    <Card.Body>
-                      <div className="d-flex gap-2 mb-3">
-                        <Form.Control placeholder="Buscar por usuario o libro..." />
-                        <Form.Select style={{ width: '180px' }}>
-                          <option>Todos</option>
-                          <option>Completados</option>
-                          <option>Cancelados</option>
-                          <option>Vencidos</option>
-                        </Form.Select>
-                      </div>
-                      <Table striped bordered hover>
-                        <thead>
-                          <tr>
-                            <th>ID</th>
-                            <th>Usuario</th>
                             <th>Libro</th>
                             <th>Fecha Préstamo</th>
                             <th>Fecha Devolución</th>
+                            <th>Días de Retraso</th>
                             <th>Estado</th>
                             <th className="text-end">Acciones</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr>
-                            <td>P-950</td>
-                            <td>María González</td>
-                            <td>Programación en Java</td>
-                            <td>10/04/2025</td>
-                            <td>24/04/2025</td>
-                            <td>
-                              <Badge bg="success">Completado</Badge>
-                            </td>
-                            <td className="text-end">
-                              <Button variant="link" size="sm" onClick={() => handleShowDetails({
-                                id: "P-950",
-                                usuario: "María González",
-                                correo: "-",
-                                año: "-",
-                                libro: "Programación en Java",
-                                fechaPrestamo: "10/04/2025",
-                                fechaDevolucion: "24/04/2025",
-                                estado: "Completado"
-                              })}>
-                                <Eye className="me-2" />
-                                Ver detalles
-                              </Button>
-                            </td>
-                          </tr>
-                          {/* Más filas... */}
+                          {loadingPrestamos ? (
+                            <tr>
+                              <td colSpan={7} className="text-center">Cargando...</td>
+                            </tr>
+                          ) : prestamosVencidos.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center">No hay préstamos vencidos.</td>
+                            </tr>
+                          ) : (
+                            prestamosVencidos.map(p => (
+                              <PrestamoRow
+                                key={p.id}
+                                prestamo={p}
+                                tipo="vencido"
+                                usuariosCache={usuariosCache}
+                                fetchUsuario={fetchUsuario}
+                                setDetailsData={setDetailsData}
+                                setShowDetails={setShowDetails}
+                                handleAction={handleAction}
+                              />
+                            ))
+                          )}
                         </tbody>
                       </Table>
-                      <div className="d-flex justify-content-end gap-2 mt-3">
-                        <Button variant="outline-secondary" size="sm">Anterior</Button>
-                        <Button variant="outline-secondary" size="sm">Siguiente</Button>
-                      </div>
                     </Card.Body>
                   </Card>
                 </Tab.Pane>
+
+                {/* Historial eliminado */}
               </Tab.Content>
             </Tab.Container>
           </Container>
         </main>
       </div>
     </div>
+  );
+}
+
+function PrestamoRow({ prestamo, tipo, usuariosCache, fetchUsuario, setDetailsData, setShowDetails, handleAction }) {
+  const [_, setRerender] = useState(0);
+  useEffect(() => {
+    if (prestamo.user && !usuariosCache[prestamo.user]) {
+      fetchUsuario(prestamo.user).then(() => setRerender(r => r + 1));
+    }
+    // eslint-disable-next-line
+  }, [prestamo.user, usuariosCache]);
+  const usuario = usuariosCache[prestamo.user] || {};
+
+  // Calcular días de retraso
+  let diasRetraso = "-";
+  if (tipo === "vencido" && prestamo.return_date) {
+    const fechaDevolucion = new Date(prestamo.return_date);
+    const hoy = new Date();
+    const diffMs = hoy - fechaDevolucion;
+    if (diffMs > 0) {
+      diasRetraso = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    } else {
+      diasRetraso = 0;
+    }
+  }
+
+  // Acción para aprobar solicitud
+  const handleAprobar = async () => {
+    const token = localStorage.getItem('sgp-uci-token');
+    // Calcular nueva fecha de devolución (7 días después de loan_date)
+    const fechaPrestamo = prestamo.loan_date ? new Date(prestamo.loan_date) : new Date();
+    const fechaDevolucion = new Date(fechaPrestamo);
+    fechaDevolucion.setDate(fechaPrestamo.getDate() + 7);
+    const return_date = fechaDevolucion.toISOString().split('T')[0];
+
+    try {
+      // 1. Actualizar el préstamo (status y return_date)
+      await fetch(`http://localhost:8000/library/api/loans/${prestamo.id}/`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...prestamo,
+          status: "ONDATE",
+          return_date
+        })
+      });
+
+      // 2. Restar 1 a available_copies del libro
+      if (prestamo.book) {
+        // Obtener datos actuales del libro
+        const resBook = await fetch(`http://localhost:8000/library/api/books/${prestamo.book}/`, {
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const bookData = await resBook.json();
+        const newAvailable = Math.max(0, (bookData.available_copies || 0) - 1);
+        await fetch(`http://localhost:8000/library/api/books/${prestamo.book}/`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            ...bookData,
+            available_copies: newAvailable
+          })
+        });
+      }
+
+      // Actualizar en la UI: mover el préstamo a activos
+      if (typeof window !== "undefined" && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent("prestamo-aprobado", { detail: { id: prestamo.id, status: "ONDATE", return_date } }));
+      }
+      handleAction("La solicitud fue aprobada");
+    } catch {
+      handleAction("Error al aprobar la solicitud");
+    }
+  };
+
+  // Acción para rechazar solicitud
+  const handleRechazar = async () => {
+    const token = localStorage.getItem('sgp-uci-token');
+    try {
+      await fetch(`http://localhost:8000/library/api/loans/${prestamo.id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      // Actualizar en la UI: quitar el préstamo de la lista
+      if (typeof window !== "undefined" && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent("prestamo-rechazado", { detail: { id: prestamo.id } }));
+      }
+      handleAction("La solicitud fue rechazada");
+    } catch {
+      handleAction("Error al rechazar la solicitud");
+    }
+  };
+
+  // Acción para marcar como devuelto (eliminar préstamo y sumar available_copies)
+  const handleMarcarDevuelto = async () => {
+    const token = localStorage.getItem('sgp-uci-token');
+    try {
+      // 1. Sumar 1 a available_copies del libro
+      if (prestamo.book) {
+        // Obtener datos actuales del libro
+        const resBook = await fetch(`http://localhost:8000/library/api/books/${prestamo.book}/`, {
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const bookData = await resBook.json();
+        const newAvailable = (bookData.available_copies || 0) + 1;
+        await fetch(`http://localhost:8000/library/api/books/${prestamo.book}/`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            ...bookData,
+            available_copies: newAvailable
+          })
+        });
+      }
+
+      // 2. Eliminar el préstamo
+      await fetch(`http://localhost:8000/library/api/loans/${prestamo.id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      // Actualizar en la UI: quitar el préstamo de la lista
+      if (typeof window !== "undefined" && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent("prestamo-rechazado", { detail: { id: prestamo.id } }));
+      }
+      handleAction("El préstamo fue marcado como devuelto");
+    } catch {
+      handleAction("Error al marcar como devuelto");
+    }
+  };
+
+  return (
+    <tr>
+      <td>{prestamo.id}</td>
+      <td>{prestamo.book_title || "-"}</td>
+      <td>{prestamo.loan_date || "-"}</td>
+      <td>{prestamo.return_date || "-"}</td>
+      {tipo === "solicitud" && (
+        <td>
+          <Badge bg="warning">Pendiente</Badge>
+        </td>
+      )}
+      {tipo === "activo" && (
+        <td>
+          <Badge bg="success">Activo</Badge>
+        </td>
+      )}
+      {tipo === "vencido" && (
+        <>
+          <td>{diasRetraso}</td>
+          <td>
+            <Badge bg="danger">Vencido</Badge>
+          </td>
+        </>
+      )}
+      <td className="text-end">
+        <Dropdown>
+          <Dropdown.Toggle variant="link" size="sm">
+            Acciones
+          </Dropdown.Toggle>
+          <Dropdown.Menu>
+            <Dropdown.Item onClick={async () => {
+              let user = usuariosCache[prestamo.user] || {};
+              if (!user.username) {
+                user = await fetchUsuario(prestamo.user);
+              }
+              setDetailsData({
+                id: prestamo.id,
+                usuario: user?.username || "-",
+                correo: user?.email || "-",
+                año: user?.academic_year || "-",
+                libro: prestamo.book_title || "-",
+                fechaPrestamo: prestamo.loan_date || "-",
+                fechaDevolucion: prestamo.return_date || "-",
+                estado: prestamo.status
+              });
+              setShowDetails(true);
+            }}>
+              <Eye className="me-2" />
+              Ver detalles
+            </Dropdown.Item>
+            {tipo === "activo" && (
+              <>
+                <Dropdown.Item onClick={() => handleAction("El plazo fue extendido correctamente")}>
+                  <Clock className="me-2" />
+                  Extender plazo
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handleMarcarDevuelto}>
+                  <XCircle className="me-2" />
+                  Marcar como devuelto
+                </Dropdown.Item>
+              </>
+            )}
+            {tipo === "solicitud" && (
+              <>
+                <Dropdown.Item onClick={handleAprobar}>
+                  <CheckCircle className="me-2" />
+                  Aprobar
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handleRechazar}>
+                  <XCircle className="me-2" />
+                  Rechazar
+                </Dropdown.Item>
+              </>
+            )}
+            {tipo === "vencido" && (
+              <>
+                <Dropdown.Item onClick={() => handleAction("Se envió un recordatorio al usuario")}>
+                  <Bell className="me-2" />
+                  Enviar recordatorio
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handleMarcarDevuelto}>
+                  <XCircle className="me-2" />
+                  Marcar como devuelto
+                </Dropdown.Item>
+              </>
+            )}
+          </Dropdown.Menu>
+        </Dropdown>
+      </td>
+    </tr>
   );
 }

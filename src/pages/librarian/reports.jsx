@@ -1,3 +1,5 @@
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import React, { useState } from 'react';
 import {
   BookOpen,
@@ -27,6 +29,96 @@ export default function ReportesPage() {
 
   // Estado para tabs de reportes
   const [activeKey, setActiveKey] = useState("prestamos");
+
+  // Reporte de Préstamos (ya implementado)
+  const handleDownloadPrestamos = async () => {
+    const token = localStorage.getItem('sgp-uci-token');
+    const res = await fetch('http://localhost:8000/library/api/loans/', {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await res.json();
+
+    const doc = new jsPDF();
+    doc.text("Reporte de Préstamos", 14, 16);
+
+    const rows = (Array.isArray(data) ? data : []).map(p => [
+      p.id,
+      p.book_title,
+      p.loan_date,
+      p.return_date,
+      p.status
+    ]);
+    autoTable(doc, {
+      head: [["ID", "Libro", "Fecha Préstamo", "Fecha Devolución", "Estado"]],
+      body: rows,
+      startY: 22
+    });
+
+    doc.save("reporte_prestamos.pdf");
+  };
+
+  // Reporte de Usuarios
+  const handleDownloadUsuarios = async () => {
+    const token = localStorage.getItem('sgp-uci-token');
+    const res = await fetch('http://localhost:8000/library/api/users/', {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await res.json();
+
+    const doc = new jsPDF();
+    doc.text("Reporte de Usuarios", 14, 16);
+
+    const rows = (Array.isArray(data) ? data : []).map(u => [
+      u.id,
+      u.username,
+      u.email,
+      u.academic_year || "-",
+      u.is_active ? "Activo" : "Inactivo"
+    ]);
+    autoTable(doc, {
+      head: [["ID", "Usuario", "Correo", "Año Académico", "Estado"]],
+      body: rows,
+      startY: 22
+    });
+
+    doc.save("reporte_usuarios.pdf");
+  };
+
+  // Reporte de Libros
+  const handleDownloadLibros = async () => {
+    const token = localStorage.getItem('sgp-uci-token');
+    const res = await fetch('http://localhost:8000/library/api/books/', {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await res.json();
+
+    const doc = new jsPDF();
+    doc.text("Reporte de Libros", 14, 16);
+
+    const rows = (Array.isArray(data) ? data : []).map(b => [
+      b.id,
+      b.title,
+      b.author,
+      b.total_copies,
+      b.available_copies
+    ]);
+    autoTable(doc, {
+      head: [["ID", "Título", "Autor", "Ejemplares Totales", "Disponibles"]],
+      body: rows,
+      startY: 22
+    });
+
+    doc.save("reporte_libros.pdf");
+  };
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
@@ -123,8 +215,8 @@ export default function ReportesPage() {
                       <Card.Text>
                         Descarga un listado de todos los préstamos realizados, incluyendo fechas, usuarios y estado.
                       </Card.Text>
-                      <Button variant="primary" disabled>
-                        Descargar reporte (próximamente)
+                      <Button variant="primary" onClick={handleDownloadPrestamos}>
+                        Descargar reporte
                       </Button>
                     </Card.Body>
                   </Card>
@@ -136,8 +228,8 @@ export default function ReportesPage() {
                       <Card.Text>
                         Descarga información sobre los usuarios y su actividad de préstamos.
                       </Card.Text>
-                      <Button variant="primary" disabled>
-                        Descargar reporte (próximamente)
+                      <Button variant="primary" onClick={handleDownloadUsuarios}>
+                        Descargar reporte
                       </Button>
                     </Card.Body>
                   </Card>
@@ -149,8 +241,8 @@ export default function ReportesPage() {
                       <Card.Text>
                         Descarga estadísticas de uso y préstamos por libro.
                       </Card.Text>
-                      <Button variant="primary" disabled>
-                        Descargar reporte (próximamente)
+                      <Button variant="primary" onClick={handleDownloadLibros}>
+                        Descargar reporte
                       </Button>
                     </Card.Body>
                   </Card>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Bell,
   BookOpenCheck,
@@ -130,38 +130,121 @@ export default function Notificaciones() {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [activeTab, setActiveTab] = useState("todas")
-  const [notificacionesState, setNotificacionesState] = useState(notificaciones)
-  const [showRenovacionModal, setShowRenovacionModal] = useState(false);
+  const [notificacionesState, setNotificacionesState] = useState([])
+  const [showRenovacionModal, setShowRenovacionModal] = useState(false)
   const itemsPerPage = 5
   const navigate = useNavigate()
 
   let username = 'Estudiante'
+  let userId = null
   if (typeof window !== "undefined" && window.localStorage) {
     try {
       username = localStorage.getItem('sgp-uci-username') || 'Estudiante'
+      userId = localStorage.getItem('sgp-uci-id')
     } catch (e) {
       username = 'Estudiante'
     }
   }
+
+  // Obtener notificaciones reales del backend
+  useEffect(() => {
+    if (!userId) return
+    const token = localStorage.getItem('sgp-uci-token')
+    fetch(`http://localhost:8000/library/api/users/${userId}/notifications`, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        // Adaptar los datos para que tengan las mismas propiedades que el mock
+        const adaptadas = Array.isArray(data)
+          ? data.map(n => ({
+              id: n.id,
+              tipo: n.type ? n.type.toLowerCase() : "sistema",
+              titulo: n.title || "Notificación",
+              mensaje: n.description || "",
+              fecha: n.created_at ? new Date(n.created_at) : new Date(),
+              leido: n.is_read,
+              libro: n.book_title
+                ? { titulo: n.book_title, codigo: n.book || "" }
+                : undefined,
+              icono:
+                n.type === "DISPONIBILIDAD"
+                  ? BookOpenCheck
+                  : n.type === "VENCIMIENTO"
+                  ? Clock
+                  : n.type === "RENOVACION"
+                  ? Calendar
+                  : n.type === "MULTA"
+                  ? Bell
+                  : Bell
+            }))
+          : []
+        setNotificacionesState(adaptadas)
+      })
+      .catch(() => setNotificacionesState([]))
+  }, [userId])
 
   const handleLogout = () => {
     localStorage.removeItem('sgp-uci-username')
     navigate('/')
   }
 
-  const marcarComoLeida = (id) => {
-    setNotificacionesState(prev => 
+  // Eliminar notificación en backend y frontend
+  const eliminarNotificacion = async (id) => {
+    const token = localStorage.getItem('sgp-uci-token');
+    try {
+      await fetch(`http://localhost:8000/library/api/notifications/${id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch {}
+    setNotificacionesState(prev => prev.filter(notif => notif.id !== id));
+  };
+
+  // Marcar una notificación como leída en backend y frontend
+  const marcarComoLeida = async (id) => {
+    const token = localStorage.getItem('sgp-uci-token');
+    try {
+      await fetch(`http://localhost:8000/library/api/notifications/${id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ is_read: true })
+      });
+    } catch {}
+    setNotificacionesState(prev =>
       prev.map(notif => notif.id === id ? { ...notif, leido: true } : notif)
-    )
-  }
+    );
+  };
 
-  const marcarTodasComoLeidas = () => {
-    setNotificacionesState(prev => prev.map(notif => ({ ...notif, leido: true })))
-  }
-
-  const eliminarNotificacion = (id) => {
-    setNotificacionesState(prev => prev.filter(notif => notif.id !== id))
-  }
+  // Marcar todas como leídas en backend y frontend
+  const marcarTodasComoLeidas = async () => {
+    const token = localStorage.getItem('sgp-uci-token');
+    // Actualiza todas en el backend
+    await Promise.all(
+      notificacionesState
+        .filter(notif => !notif.leido)
+        .map(notif =>
+          fetch(`http://localhost:8000/library/api/notifications/${notif.id}/`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Token ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ is_read: true })
+          })
+        )
+    );
+    setNotificacionesState(prev => prev.map(notif => ({ ...notif, leido: true })));
+  };
 
   const notificacionesFiltradas = notificacionesState.filter(notif => {
     const matchesSearch = Object.values(notif).some(value =>
@@ -386,31 +469,18 @@ export default function Notificaciones() {
                                 </small>
                                 
                                 <div className="d-flex gap-2">
-                                  {!notificacion.leido && (
-                                    <Button 
-                                      variant="link" 
-                                      size="sm"
-                                      onClick={() => marcarComoLeida(notificacion.id)}
-                                    >
-                                      Marcar como leída
-                                    </Button>
-                                  )}
-                                  
-                                  {/* Botón para solicitar renovación si es tipo vencimiento */}
-                                  {notificacion.tipo === "vencimiento" && (
-                                    <Button
-                                      variant="outline-primary"
-                                      size="sm"
-                                      onClick={handleSolicitarRenovacion}
-                                    >
-                                      Solicitar renovación
-                                    </Button>
-                                  )}
+                                  {/* Botón para marcar como leída en el menú */}
                                   <Dropdown>
                                     <Dropdown.Toggle variant="link" id="dropdown-actions">
                                       <MoreHorizontal size={20} />
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
+                                      {!notificacion.leido && (
+                                        <Dropdown.Item onClick={() => marcarComoLeida(notificacion.id)}>
+                                          <CheckCircle2 size={16} className="me-2" />
+                                          Marcar como leída
+                                        </Dropdown.Item>
+                                      )}
                                       <Dropdown.Item onClick={() => eliminarNotificacion(notificacion.id)}>
                                         <Trash2 size={16} className="me-2" />
                                         Eliminar

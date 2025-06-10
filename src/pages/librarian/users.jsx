@@ -153,16 +153,7 @@ export default function GestionUsuariosPage() {
       setSelectedUser(null);
     }
   };
-  const handleApproveLoan = (loanId) => {
-    // Aquí iría la lógica para aprobar el préstamo
-  };
-  const handleRejectLoan = (loanId) => {
-    // Aquí iría la lógica para rechazar el préstamo
-  };
-  // const handleAddUser = (data) => {
-  //   setShowAddModal(false);
-  //   // Aquí iría la lógica para añadir el usuario
-  // };
+
   const handleUpdateUser = (data) => {
     setShowEditModal(false);
     // Aquí iría la lógica para actualizar el usuario

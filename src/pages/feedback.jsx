@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Card,
@@ -15,7 +15,8 @@ import {
   Bell,
   User,
   LogOut,
-  MessageCircle
+  MessageCircle,
+  BellDot
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -24,6 +25,8 @@ export default function Feedback() {
   const [mensaje, setMensaje] = useState("");
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState("");
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [loadingNotificaciones, setLoadingNotificaciones] = useState(true);
   const navigate = useNavigate();
 
   let username = 'Estudiante';
@@ -52,6 +55,31 @@ export default function Feedback() {
     setTipo("queja");
     // Aquí podrías enviar los datos a un backend si lo deseas
   };
+
+  useEffect(() => {
+    let userId = null;
+    if (typeof window !== "undefined" && window.localStorage) {
+      userId = localStorage.getItem('sgp-uci-id');
+    }
+    if (!userId) return;
+    setLoadingNotificaciones(true);
+    const token = localStorage.getItem('sgp-uci-token');
+    fetch(`http://localhost:8000/library/api/users/${userId}/notifications`, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setNotificaciones(Array.isArray(data) ? data.filter(n => n.is_read === false) : []);
+        setLoadingNotificaciones(false);
+      })
+      .catch(() => {
+        setNotificaciones([]);
+        setLoadingNotificaciones(false);
+      });
+  }, []);
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
@@ -84,9 +112,21 @@ export default function Feedback() {
                 </div>
               </Form>
 
-              <Button variant="link" className="position-relative p-0">
-                <Bell size={20} />
-                <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">3</Badge>
+              <Button
+                variant="link"
+                className="position-relative p-0"
+                onClick={() => navigate('/notifications')}
+              >
+                {notificaciones && notificaciones.length > 0 ? (
+                  <BellDot size={20} className="text-danger" />
+                ) : (
+                  <Bell size={20} />
+                )}
+                {notificaciones && notificaciones.length > 0 && (
+                  <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">
+                    {notificaciones.length}
+                  </Badge>
+                )}
               </Button>
 
               <div className="d-flex align-items-center gap-2">

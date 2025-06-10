@@ -30,7 +30,8 @@ import {
     BookPlus,
     User,
     LogOut,
-    MessageCircle
+    MessageCircle,
+    BellDot
 } from "lucide-react";
 
 const CatalogoPage = () => {
@@ -48,6 +49,8 @@ const CatalogoPage = () => {
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [books, setBooks] = useState([]);
   const [categorias, setCategorias] = useState([]);
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [loadingNotificaciones, setLoadingNotificaciones] = useState(true);
 
   // Obtener username de localStorage
   useEffect(() => {
@@ -151,6 +154,37 @@ const CatalogoPage = () => {
       if (searchTerm.trim()) {
           navigate(`/catalog?query=${encodeURIComponent(searchTerm)}`);
       }
+  };
+
+  const handleSolicitarPrestamo = async (book) => {
+    const token = localStorage.getItem('sgp-uci-token');
+    const userId = localStorage.getItem('sgp-uci-id');
+    if (!token || !userId || !book) return;
+
+    // Fecha actual en formato YYYY-MM-DD
+    const today = new Date();
+    const loan_date = today.toISOString().split('T')[0];
+
+    try {
+      await fetch('http://localhost:8000/library/api/loans/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user: userId,
+          book: book.id,
+          book_title: book.title,
+          loan_date,
+          status: "AWAITING"
+        })
+      });
+      setShowLoanModal(true);
+    } catch {
+      // Puedes mostrar un error si lo deseas
+      setShowLoanModal(true);
+    }
   };
 
   const FiltersContent = () => (
@@ -279,7 +313,7 @@ const CatalogoPage = () => {
               variant="primary"
               size="lg"
               className="w-100"
-              onClick={() => setShowLoanModal(true)}
+              onClick={() => handleSolicitarPrestamo(selectedBook)}
               disabled={selectedBook.available_copies <= 0}
             >
               {selectedBook.available_copies > 0 ? 'Solicitar Préstamo' : 'No disponible'}
@@ -290,6 +324,32 @@ const CatalogoPage = () => {
     </Modal.Body>
   </Modal>
 );
+
+  // Obtener notificaciones al cargar la página
+  useEffect(() => {
+    let userId = null;
+    if (typeof window !== "undefined" && window.localStorage) {
+      userId = localStorage.getItem('sgp-uci-id');
+    }
+    if (!userId) return;
+    setLoadingNotificaciones(true);
+    const token = localStorage.getItem('sgp-uci-token');
+    fetch(`http://localhost:8000/library/api/users/${userId}/notifications`, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setNotificaciones(Array.isArray(data) ? data.filter(n => n.is_read === false) : []);
+        setLoadingNotificaciones(false);
+      })
+      .catch(() => {
+        setNotificaciones([]);
+        setLoadingNotificaciones(false);
+      });
+  }, []);
 
   return (
       <div className="d-flex flex-column min-vh-100 bg-light">
@@ -328,9 +388,21 @@ const CatalogoPage = () => {
                               </div>
                           </Form>
 
-                          <Button variant="link" className="position-relative p-0">
+                          <Button
+                            variant="link"
+                            className="position-relative p-0"
+                            onClick={() => navigate('/notifications')}
+                          >
+                            {notificaciones && notificaciones.length > 0 ? (
+                              <BellDot size={20} className="text-danger" />
+                            ) : (
                               <Bell size={20} />
-                              <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">3</Badge>
+                            )}
+                            {notificaciones && notificaciones.length > 0 && (
+                              <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">
+                                {notificaciones.length}
+                              </Badge>
+                            )}
                           </Button>
 
                           <div className="d-flex align-items-center gap-2">
